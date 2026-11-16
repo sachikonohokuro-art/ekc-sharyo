@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1f3a">
+<title>e-KC 車両運行管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0b1f3a; --navy2:#143a6b; --blue:#2563eb; --blue-l:#e8effd;
+  --ink:#0f172a; --sub:#64748b; --line:#e2e8f0; --bg:#f1f4f9; --card:#fff;
+  --ok:#059669; --ok-l:#e7f6f0; --warn:#d97706; --warn-l:#fdf3e2; --ng:#dc2626; --ng-l:#fdecec;
+  --r:18px; --sh:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;font-size:16px;line-height:1.5}
+.num{font-family:Inter,"Noto Sans JP",sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+/* ---------- header ---------- */
+.top{position:relative;color:#fff;padding:calc(14px + env(safe-area-inset-top)) 20px 64px;
+  background:radial-gradient(120% 120% at 100% 0%,#1d4f91 0%,rgba(29,79,145,0) 55%),linear-gradient(160deg,#0b1f3a 0%,#122c52 100%);overflow:hidden}
+.top:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:22px 22px;mask-image:linear-gradient(180deg,#000,transparent)}
+.brand{position:relative;z-index:1;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.08em;opacity:.9}
+.brand .logo{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.brand .sep{opacity:.4}
+.hero{position:relative;z-index:1;margin-top:18px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.hero h1{margin:0;font-size:28px;font-weight:900;letter-spacing:.02em;line-height:1.2}
+.hero .kind{font-size:12px;opacity:.7;letter-spacing:.12em;margin-bottom:2px}
+.plate{flex:none;background:#fff;color:#0f5132;border:2px solid #1f7a4d;border-radius:6px;padding:4px 10px;text-align:center;min-width:110px;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.plate b{display:block;font-family:Inter,"Noto Sans JP";font-size:20px;font-weight:800;letter-spacing:.04em;line-height:1.1}
+.plate small{display:block;font-size:10px;font-weight:700;letter-spacing:.2em;color:#1f7a4d}
+/* ---------- layout ---------- */
+main{max-width:560px;margin:-44px auto 0;padding:0 16px calc(28px + env(safe-area-inset-bottom));position:relative;z-index:2}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:18px;margin-bottom:14px}
+.status-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;padding:7px 12px;border-radius:999px}
+.chip i{width:8px;height:8px;border-radius:50%;background:currentColor;position:relative}
+.chip.live i:after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid currentColor;opacity:.4;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{transform:scale(.6);opacity:.6}100%{transform:scale(1.6);opacity:0}}
+.c-ok{background:var(--ok-l);color:var(--ok)} .c-warn{background:var(--warn-l);color:var(--warn)} .c-ng{background:var(--ng-l);color:var(--ng)}
+.since{font-size:13px;color:var(--sub);text-align:right}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.stat{background:var(--bg);border-radius:14px;padding:12px 14px}
+.stat .k{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.06em}
+.stat .v{font-size:20px;font-weight:700;margin-top:2px}
+.stat .v small{font-size:12px;color:var(--sub);font-weight:600;margin-left:3px}
+.bar{height:6px;background:#e5e9f0;border-radius:6px;margin-top:8px;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:6px;background:var(--blue)}
+.stat.wide{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+/* ---------- buttons ---------- */
+.btn{appearance:none;border:0;width:100%;font:inherit;font-weight:700;border-radius:16px;padding:17px 18px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:transform .08s,box-shadow .2s,opacity .2s}
+.btn:active{transform:scale(.985)}
+.btn svg{width:22px;height:22px;flex:none}
+.btn-primary{background:linear-gradient(180deg,#2f6ff0,#1d4ed8);color:#fff;font-size:18px;padding:19px;box-shadow:0 10px 24px rgba(37,99,235,.32),inset 0 1px 0 rgba(255,255,255,.2)}
+.btn-ok{background:var(--ok);color:#fff;box-shadow:0 8px 20px rgba(5,150,105,.25)}
+.btn-ng{background:#fff;color:var(--ng);border:2px solid #f3c4c4}
+.btn-ghost{background:transparent;color:var(--sub);font-weight:500;font-size:14px;padding:12px}
+.btn-soft{background:var(--blue-l);color:var(--blue)}
+.btn[disabled]{opacity:.35;box-shadow:none}
+.stack>*+*{margin-top:10px}
+/* ---------- steps ---------- */
+.steps{display:flex;align-items:center;gap:6px;margin:2px 0 14px}
+.steps span{flex:1;height:4px;border-radius:4px;background:#dbe3ee}
+.steps span.on{background:var(--blue)}
+.eyebrow{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.1em}
+h2{font-size:21px;margin:4px 0 6px;font-weight:900}
+.lead{color:var(--sub);font-size:14px;margin:0 0 16px}
+/* ---------- people ---------- */
+.people{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.person{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 6px 10px;text-align:center;font:inherit;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer}
+.person .av{width:38px;height:38px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700}
+.person:active{border-color:var(--blue);background:var(--blue-l)}
+.me{display:flex;align-items:center;gap:14px;background:var(--blue-l);border:1.5px solid #bcd0f7;border-radius:16px;padding:14px;width:100%;font:inherit;cursor:pointer;text-align:left}
+.me .av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px}
+.me b{display:block;font-size:18px} .me small{color:var(--blue);font-weight:700;font-size:12px}
+.sec{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.1em;margin:18px 0 8px}
+.states{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.state{border:1.5px dashed #f0b4b4;background:#fff;color:var(--ng);border-radius:12px;padding:12px;font:inherit;font-weight:700;cursor:pointer}
+/* ---------- photos ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shot{position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#0f2a4f,#1b3f73);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+.shot svg.sil{width:70%;height:auto;opacity:.55}
+.shot .tag{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.shot .cam{position:absolute;right:8px;bottom:8px;width:32px;height:32px;border-radius:50%;background:#fff;color:var(--navy);display:grid;place-items:center}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.shot.done .ok{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;background:var(--ok);display:grid;place-items:center}
+.shot input{position:absolute;inset:0;opacity:0}
+.shot .g{font-size:11px;opacity:.75;margin-top:4px;padding:0 44px 0 10px;text-align:center}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+.ref{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:#e5e9f0}
+.ref img{width:100%;height:100%;object-fit:cover;display:block}
+.ref .tag{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.5);color:#fff;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.meta{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub);margin-bottom:12px}
+.meta b{color:var(--ink)}
+/* ---------- meter ---------- */
+.meterbox{background:var(--navy);border-radius:16px;padding:16px 18px;color:#fff;margin-bottom:14px}
+.meterbox .k{font-size:11px;letter-spacing:.12em;opacity:.6;font-weight:700}
+.meterbox input{width:100%;background:transparent;border:0;outline:0;color:#fff;font-family:Inter;font-weight:800;font-size:44px;letter-spacing:.02em;padding:4px 0;font-variant-numeric:tabular-nums}
+.meterbox input::placeholder{color:rgba(255,255,255,.25)}
+.meterbox .row{display:flex;justify-content:space-between;font-size:13px;opacity:.85}
+.diff{font-family:Inter;font-weight:700;color:#7dd3fc}
+.field{width:100%;font:inherit;font-size:17px;padding:14px 16px;border:1.5px solid var(--line);border-radius:14px;background:#fff;outline:0}
+.field:focus{border-color:var(--blue)}
+textarea.field{min-height:84px;resize:vertical}
+.note{border-radius:12px;padding:11px 13px;font-size:14px;margin:10px 0;display:flex;gap:8px}
+.note.warn{background:var(--warn-l);color:#92400e} .note.err{background:var(--ng-l);color:#991b1b} .note.info{background:var(--blue-l);color:#1e3a8a}
+.opt{display:flex;align-items:center;gap:14px;width:100%;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:15px 16px;font:inherit;text-align:left;cursor:pointer}
+.opt .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none}
+.opt b{display:block;font-size:16px} .opt small{color:var(--sub);font-size:13px}
+.opt:active{border-color:var(--blue)}
+/* ---------- done ---------- */
+.done{text-align:center;padding:26px 18px}
+.check{width:84px;height:84px;margin:4px auto 14px;border-radius:50%;background:var(--ok-l);display:grid;place-items:center}
+.check svg{width:46px;height:46px;stroke:var(--ok);stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .15s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.summary{background:var(--bg);border-radius:14px;padding:6px 14px;margin:16px 0 4px;text-align:left}
+.summary div{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.summary div:last-child{border:0} .summary span{color:var(--sub)}
+/* ---------- loader ---------- */
+#busy{position:fixed;inset:0;background:rgba(241,244,249,.72);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:50;font-weight:700;color:var(--navy)}
+#busy.hide{display:none}
+.spin{width:44px;height:44px;border-radius:50%;border:4px solid #d6e0f0;border-top-color:var(--blue);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.fade{animation:fi .25s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.foot{text-align:center;font-size:11px;color:#94a3b8;margin-top:18px;letter-spacing:.06em}
+.list .opt{margin-bottom:8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v4a1 1 0 0 1-1 1h-1"/><path d="M5 18H4a1 1 0 0 1-1-1v-4h18"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg></div>e-KC<span class="sep">|</span>車両運行管理</div>
+  <div class="hero"><div><div class="kind" id="hKind">VEHICLE</div><h1 id="hName">読み込み中</h1></div><div class="plate" id="hPlate" style="display:none"><small>NO.</small><b id="hPlateNo"></b></div></div>
+</header>
+<main id="app"></main>
+<div id="busy" class="hide"><div class="spin"></div><div id="busyTxt">送信中…</div></div>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbx_LoK0R7JQwjlY-69BImwaYu-SxX2KcpFEmARzuqao_hDmT0Our6Ytnq3Dcd7ROiUu/exec';
+var CAR_ID = (new URLSearchParams(location.search).get('car') || '').toUpperCase();
+var D = null, S = {}, LABELS = ['前', '後ろ', '右', '左'];
+var STATUS_VIEW = { '空き': ['待機中', 'c-ok', false], '使用中': ['運行中', 'c-warn', true] };
+var GUIDE = { '前': '正面から車全体', '後ろ': '後方から車全体', '右': '運転席側を全体', '左': '助手席側を全体' };
+var COLORS = ['#2563eb','#0891b2','#7c3aed','#db2777','#ea580c','#059669','#4f46e5','#0d9488','#9333ea','#c2410c'];
+
+var IC = {
+  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3m-3 3l2 2m-4 0l2 2"/></svg>',
+  flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4m0 0h12l-2 4 2 4H4"/></svg>',
+  wrench: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4m0 3v.01"/></svg>',
+  cam: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  fuel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M4 10h10"/><path d="M14 8l3 3v6a1.5 1.5 0 0 0 3 0V9l-3-3"/></svg>',
+  dent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v4H3z"/><path d="M9 11l2 2 2-3 2 2"/></svg>',
+  light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v5m0 3v.01"/></svg>',
+  ok: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+};
+var SIL = {
+  side: '<svg class="sil" viewBox="0 0 200 90" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"><path d="M12 62V40l22-22h96l34 26 22 6v12z"/><path d="M40 24h40v22H28zM88 24h40l22 22H88z"/><circle cx="50" cy="66" r="12" fill="#0f2a4f"/><circle cx="158" cy="66" r="12" fill="#0f2a4f"/></svg>',
+  front: '<svg class="sil" viewBox="0 0 160 100" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"><path d="M24 84V44l14-30h84l14 30v40z"/><path d="M42 20h76l10 22H32z"/><rect x="34" y="54" width="22" height="9" rx="3"/><rect x="104" y="54" width="22" height="9" rx="3"/><path d="M64 70h32"/><rect x="18" y="84" width="20" height="10" rx="3"/><rect x="122" y="84" width="20" height="10" rx="3"/></svg>',
+  rear: '<svg class="sil" viewBox="0 0 160 100" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"><path d="M26 84V24a8 8 0 0 1 8-8h92a8 8 0 0 1 8 8v60z"/><rect x="40" y="24" width="80" height="26" rx="4"/><rect x="30" y="56" width="10" height="18" rx="2"/><rect x="120" y="56" width="10" height="18" rx="2"/><rect x="62" y="64" width="36" height="12" rx="2"/><rect x="22" y="84" width="20" height="10" rx="3"/><rect x="118" y="84" width="20" height="10" rx="3"/></svg>'
+};
+function sil(l) { return l === '前' ? SIL.front : l === '後ろ' ? SIL.rear : l === '左' ? SIL.side.replace('<svg class="sil"', '<svg class="sil" style="transform:scaleX(-1)"') : SIL.side; }
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function km(n) { return Number(n || 0).toLocaleString('ja-JP'); }
+function color(n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; return COLORS[h % COLORS.length]; }
+function av(n, cls) { return '<div class="av ' + (cls || '') + '" style="background:' + color(n) + '">' + esc(n.charAt(0)) + '</div>'; }
+function busy(on, t) { $('busyTxt').textContent = t || '送信中…'; $('busy').classList.toggle('hide', !on); }
+function view(h) { var a = $('app'); a.innerHTML = '<div class="fade">' + h + '</div>'; window.scrollTo(0, 0); }
+function saveName(n) { try { localStorage.setItem('sharyo_name', n); } catch (e) {} }
+function loadName() { try { return localStorage.getItem('sharyo_name') || ''; } catch (e) { return ''; } }
+function steps(n, total) { var h = '<div class="steps">'; for (var i = 1; i <= total; i++) h += '<span class="' + (i <= n ? 'on' : '') + '"></span>'; return h + '</div>'; }
+
+/* ---------- サーバー ---------- */
+function api(fn, args) {
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args || [] }) })
+    .then(function (r) { return r.json(); })
+    .then(function (j) { if (!j.ok) throw new Error(j.msg || 'エラー'); if (j.data && j.data.ok === false) throw new Error(j.data.msg); return j.data; });
+}
+function run(fn, args, txt) { busy(true, txt); return api(fn, args).then(function (d) { busy(false); return d; }, function (e) { busy(false); fail(e.message || e); throw e; }); }
+function fail(m) { view('<div class="card"><div class="eyebrow">ERROR</div><h2>送信できませんでした</h2><div class="note err">' + IC.alert.replace('<svg', '<svg width="18" height="18"') + '<div>' + esc(m) + '</div></div><p class="lead">電波の良い場所で、もう一度お試しください。</p><button class="btn btn-primary" onclick="start()">最初からやり直す</button></div>'); }
+
+/* ---------- 最初 ---------- */
+function start() {
+  S = {};
+  if (!CAR_ID) { pickCar(); return; }
+  run('apiGetCar', [CAR_ID], '読み込み中…').then(function (r) { D = r; head(); home(); });
+}
+function head() {
+  var c = D.car;
+  $('hName').textContent = c.name; $('hKind').textContent = 'VEHICLE ' + c.id;
+  $('hPlateNo').textContent = c.plate; $('hPlate').style.display = '';
+  document.title = c.name + '｜e-KC 車両運行管理';
+}
+function pickCar() {
+  $('hName').textContent = '車両を選択'; $('hKind').textContent = 'SELECT';
+  run('apiCars', [], '読み込み中…').then(function (list) {
+    var h = '<div class="card"><div class="eyebrow">VEHICLES</div><h2>車両を選んでください</h2><p class="lead">通常は車内のQRコードを読み取ると、この画面は表示されません。</p><div class="list">';
+    list.forEach(function (c) { h += '<button class="opt" onclick="CAR_ID=\'' + c.id + '\';start()"><div class="ic" style="background:var(--blue-l);color:var(--blue)">' + IC.key + '</div><div><b>' + esc(c.name) + '</b><small>' + esc(c.plate) + '</small></div></button>'; });
+    view(h + '</div></div>');
+  });
+}
+
+function home() {
+  var c = D.car, sv = STATUS_VIEW[c.status] || [c.status, 'c-ng', false];
+  var oilLeft = c.oilNext && c.lastMeter ? c.oilNext - c.lastMeter : null;
+  var oilPct = oilLeft === null ? 0 : Math.max(0, Math.min(100, 100 - oilLeft / 50));
+  var h = '<div class="card"><div class="status-row"><span class="chip ' + sv[1] + (sv[2] ? ' live' : '') + '"><i></i>' + esc(sv[0]) + '</span><div class="since">';
+  if (c.status === '使用中') h += '<b>' + esc(c.user) + '</b> さん<br>' + esc(c.since) + ' 出発';
+  else if (c.status !== '空き') h += esc(c.since) + ' から';
+  else h += '出発できます';
+  h += '</div></div><div class="stats">';
+  h += '<div class="stat"><div class="k">走行距離</div><div class="v num">' + (c.lastMeter ? km(c.lastMeter) + '<small>km</small>' : '—') + '</div></div>';
+  h += '<div class="stat"><div class="k">オイル交換まで</div><div class="v num"' + (oilLeft !== null && oilLeft <= 500 ? ' style="color:var(--ng)"' : '') + '>' + (oilLeft === null ? '—' : km(oilLeft) + '<small>km</small>') + '</div>' + (oilLeft === null ? '' : '<div class="bar"><span style="width:' + oilPct + '%;' + (oilLeft <= 500 ? 'background:var(--ng)' : '') + '"></span></div>') + '</div>';
+  h += '<div class="stat wide"><div><div class="k">本日の点検写真</div><div style="font-weight:700;margin-top:2px">' + (c.baseToday ? '撮影済み・' + esc(c.baseBy) + ' さん' : '未撮影') + '</div></div><span class="chip ' + (c.baseToday ? 'c-ok' : 'c-warn') + '" style="padding:5px 10px;font-size:12px">' + (c.baseToday ? 'OK' : '出発時に撮影') + '</span></div>';
+  h += '</div></div><div class="stack">';
+
+  if (c.status === '使用中') {
+    var me = loadName();
+    if (!me || me === c.user) {
+      h += '<button class="btn btn-primary" onclick="S.name=D.car.user;alightMeter()">' + IC.flag + '帰着を報告する</button>';
+      h += '<button class="btn btn-ghost" onclick="askName(\'board\')">別の人が出発する（帰着の入力漏れ）</button>';
+    } else {
+      h += '<div class="note warn">' + esc(c.user) + ' さんの帰着がまだ入力されていません。</div>';
+      h += '<button class="btn btn-primary" onclick="S.name=D.car.user;alightMeter()">' + IC.flag + esc(c.user) + ' さんの帰着を入力</button>';
+      h += '<button class="btn btn-soft" onclick="askName(\'board\')">' + IC.key + '自分（' + esc(me) + '）が出発する</button>';
+    }
+  } else if (c.status === '空き') {
+    h += '<button class="btn btn-primary" onclick="askName(\'board\')">' + IC.key + '出発する</button>';
+  } else {
+    h += '<button class="btn btn-primary" onclick="askName(\'return\')">' + IC.wrench + '運用に戻す（' + esc(c.status) + '）</button>';
+    h += '<button class="btn btn-soft" onclick="askName(\'board\')">' + IC.key + 'このまま出発する</button>';
+  }
+  view(h + '</div><div class="foot">e-KC FLEET LOG</div>');
+}
+
+/* ---------- 運転者 ---------- */
+function askName(mode) {
+  S.mode = mode;
+  var me = loadName();
+  var h = '<div class="card">' + steps(1, mode === 'return' ? 3 : 4) + '<div class="eyebrow">STEP 1</div><h2>' + (mode === 'return' ? '担当者を選択' : '運転者を選択') + '</h2><p class="lead">次回からは自動で表示されます。</p>';
+  if (me && D.people.indexOf(me) >= 0) h += '<button class="me" onclick="pickName(\'' + esc(me) + '\')">' + av(me) + '<div><small>前回の運転者</small><b>' + esc(me) + '</b></div></button><div class="sec">ほかの人</div>';
+  h += '<div class="people">';
+  D.people.forEach(function (n) { h += '<button class="person" onclick="pickName(\'' + esc(n) + '\')">' + av(n) + esc(n) + '</button>'; });
+  h += '</div>';
+  if (mode === 'board') {
+    h += '<div class="sec">車両ステータスを変更</div><div class="states">';
+    D.statuses.forEach(function (s) { h += '<button class="state" onclick="statusFlow(\'' + esc(s) + '\')">' + esc(s) + '</button>'; });
+    h += '</div>';
+  }
+  view(h + '<button class="btn btn-ghost" style="margin-top:8px" onclick="home()">戻る</button></div>');
+}
+function pickName(n) {
+  S.name = n; saveName(n);
+  if (S.mode === 'return') { S.photos = {}; photos4(2, 3, '整備後の車両を撮影', returnMeter); return; }
+  boardCompare();
+}
+
+/* ---------- 出発 ---------- */
+function boardCompare() {
+  if (!D.car.hasBase) { S.check = '基準写真なし'; boardPhotosOrMeter(); return; }
+  run('apiBaselinePhotos', [D.car.id], '前回の写真を読み込み中…').then(function (list) {
+    var h = '<div class="card">' + steps(2, 4) + '<div class="eyebrow">STEP 2 ・ 外観チェック</div><h2>前回の写真と見比べてください</h2><p class="lead">車の周りを一周して、新しいキズ・へこみがないか確認します。</p>';
+    h += '<div class="meta">' + av(D.car.baseBy || '?') + '<div><b>' + esc(D.car.baseBy) + '</b> さんが撮影<br>' + esc(D.car.baseAt) + '</div></div><div class="grid2">';
+    list.forEach(function (p) { h += '<div class="ref">' + (p.data ? '<img src="' + p.data + '">' : '') + '<span class="tag">' + esc(p.label) + '</span></div>'; });
+    h += '</div></div><div class="stack">';
+    h += '<button class="btn btn-ok" onclick="S.check=\'変わらん\';boardPhotosOrMeter()">' + IC.check + '異常なし</button>';
+    h += '<button class="btn btn-ng" onclick="damageForm()">' + IC.alert + '新しいキズ・へこみがある</button></div>';
+    view(h);
+  });
+}
+function damageForm() {
+  S.check = '変わっとる'; S.dmg = [];
+  var h = '<div class="card">' + steps(2, 4) + '<div class="eyebrow" style="color:var(--ng)">キズの報告</div><h2>見つけたキズを撮影</h2><p class="lead">場所が分かるように1〜3枚。見つけた方が疑われることはありません。</p>';
+  h += '<div class="grid2" id="dmgSlots"></div><div class="sec">場所と状態</div><textarea class="field" id="dmgNote" placeholder="例）右後ろのドアにこすりキズ"></textarea>';
+  h += '<button class="btn btn-primary" style="margin-top:14px" id="dmgNext" disabled onclick="S.dmgNote=$(\'dmgNote\').value;boardPhotosOrMeter()">次へ</button></div>';
+  view(h); renderDmg();
+}
+function renderDmg() {
+  var h = '';
+  for (var i = 0; i < 3; i++) {
+    var d = S.dmg[i];
+    h += '<label class="shot' + (d ? ' done' : '') + '">' + (d ? '<img src="' + d + '"><span class="ok">' + IC.ok + '</span>' : IC.dent.replace('<svg', '<svg class="sil" style="width:40%"')) + '<span class="tag">' + (i + 1) + '枚目</span>' + (d ? '' : '<span class="cam">' + IC.cam + '</span>') + '<input type="file" accept="image/*" capture="environment" onchange="takeDmg(this,' + i + ')"></label>';
+  }
+  $('dmgSlots').innerHTML = h;
+  var b = $('dmgNext'); if (b && S.issue === undefined) b.disabled = !S.dmg.length;
+}
+function takeDmg(inp, i) { if (!inp.files[0]) return; shrink(inp.files[0]).then(function (d) { S.dmg[i] = d; S.dmg = S.dmg.filter(Boolean); renderDmg(); }); }
+function boardPhotosOrMeter() {
+  if (!D.car.baseToday) { S.photos = {}; photos4(3, 4, '本日の点検写真を撮影', boardMeter, '本日最初の運転です。出発前に4方向を撮影してください。'); }
+  else boardMeter();
+}
+
+/* ---------- 4方向の写真 ---------- */
+function photos4(n, total, title, next, lead) {
+  S.after = next;
+  var h = '<div class="card">' + steps(n, total) + '<div class="eyebrow">STEP ' + n + ' ・ 撮影</div><h2>' + esc(title) + '</h2><p class="lead">' + esc(lead || '枠をタップするとカメラが起動します。') + '</p><div class="grid2" id="slots"></div>';
+  view(h + '<button class="btn btn-primary" style="margin-top:14px" id="pNext" disabled onclick="S.after()">次へ</button></div>');
+  renderSlots();
+}
+function renderSlots() {
+  var h = '';
+  LABELS.forEach(function (l) {
+    var d = S.photos[l];
+    h += '<label class="shot' + (d ? ' done' : '') + '">' + (d ? '<img src="' + d + '"><span class="ok">' + IC.ok + '</span>' : sil(l) + '<div class="g">' + GUIDE[l] + '</div><span class="cam">' + IC.cam + '</span>') + '<span class="tag">' + l + '</span><input type="file" accept="image/*" capture="environment" onchange="take(this,\'' + l + '\')"></label>';
+  });
+  $('slots').innerHTML = h;
+  $('pNext').disabled = LABELS.some(function (l) { return !S.photos[l]; });
+}
+function take(inp, l) { if (!inp.files[0]) return; shrink(inp.files[0]).then(function (d) { S.photos[l] = d; renderSlots(); }); }
+
+/** 写真をスマホの中で縮小（長辺1280px・約0.2MB） */
+function shrink(file) {
+  return new Promise(function (resolve) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var max = 1280, w = img.naturalWidth, hh = img.naturalHeight, r = Math.min(1, max / Math.max(w, hh));
+      var cv = document.createElement('canvas'); cv.width = Math.round(w * r); cv.height = Math.round(hh * r);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url); resolve(cv.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = url;
+  });
+}
+function upload(list) {
+  var ids = [], i = 0;
+  function one() {
+    if (i >= list.length) { busy(false); return Promise.resolve(ids); }
+    busy(true, '写真を送信中（' + (i + 1) + ' / ' + list.length + '）');
+    return api('apiUploadPhoto', [D.car.id, list[i].label, list[i].data]).then(function (id) { ids.push(id); i++; return one(); });
+  }
+  return one().catch(function (e) { busy(false); fail('写真を送信できませんでした：' + (e.message || e)); throw e; });
+}
+
+/* ---------- メーター ---------- */
+function meterForm(n, total, title, onNext, optional) {
+  var last = D.car.lastMeter;
+  var h = '<div class="card">' + steps(n, total) + '<div class="eyebrow">STEP ' + n + ' ・ メーター</div><h2>' + esc(title) + '</h2><p class="lead">メーターに表示されている総走行距離を入力してください。</p>';
+  h += '<div class="meterbox"><div class="k">ODOMETER</div><input id="meter" type="number" inputmode="numeric" placeholder="000000" oninput="meterDiff()"><div class="row"><span>前回 <span class="num">' + (last ? km(last) + ' km' : '記録なし') + '</span></span><span class="diff" id="mDiff"></span></div></div>';
+  h += '<div id="mWarn"></div><button class="btn btn-primary" onclick="checkMeter()">次へ</button>';
+  if (optional) h += '<button class="btn btn-ghost" onclick="S.meter=\'\';S.meterNext()">分からないのでスキップ</button>';
+  view(h + '</div>');
+  S.meterNext = onNext; S.meterConfirmed = false;
+}
+function meterDiff() { var v = Number($('meter').value), last = D.car.lastMeter; $('mDiff').textContent = v && last ? (v - last >= 0 ? '+' : '') + km(v - last) + ' km' : ''; S.meterConfirmed = false; $('mWarn').innerHTML = ''; }
+function checkMeter() {
+  var v = Number($('meter').value), last = D.car.lastMeter;
+  if (!v) { $('mWarn').innerHTML = '<div class="note err">メーターの数字を入力してください。</div>'; return; }
+  if (last && (v < last || v > last + 1500) && !S.meterConfirmed) {
+    S.meterConfirmed = true;
+    $('mWarn').innerHTML = '<div class="note warn">前回（' + km(last) + ' km）より' + (v < last ? '小さい' : 'かなり大きい') + '値です。正しければ、もう一度「次へ」を押してください。</div>';
+    return;
+  }
+  S.meter = v; S.meterNext();
+}
+function boardMeter() { meterForm(4, 4, '出発時のメーター', boardOil); }
+
+function boardOil() {
+  var c = D.car, m = S.meter;
+  var need = (!c.oilNext && !c.oilUnknown) || (c.oilNext && m && m >= c.oilNext);
+  if (!need) { boardSend(); return; }
+  var h = '<div class="card"><div class="eyebrow">オイル管理</div><h2>オイル交換ステッカーの確認</h2><p class="lead">' + (c.oilNext ? '交換予定の ' + km(c.oilNext) + ' km を過ぎています。交換済みなら、新しいステッカーの「次回交換km」を入力してください。' : 'この車両のオイル交換時期がまだ登録されていません。フロントガラスのステッカーにある「次回交換km」を入力してください。') + '</p>';
+  h += '<input class="field num" id="oil" type="number" inputmode="numeric" placeholder="例）55000" style="font-size:24px;font-weight:700">';
+  h += '<div class="stack" style="margin-top:14px"><button class="btn btn-primary" onclick="S.oilNext=$(\'oil\').value||\'\';boardSend()">登録して出発</button>';
+  h += '<button class="btn btn-ghost" onclick="S.oilNext=' + (c.oilNext ? '\'\'' : '\'unknown\'') + ';boardSend()">' + (c.oilNext ? 'まだ交換していない' : 'ステッカーがない・分からない') + '</button></div></div>';
+  view(h);
+}
+function boardSend() {
+  var plist = S.photos && Object.keys(S.photos).length ? LABELS.map(function (l) { return { label: l, data: S.photos[l] }; }) : [];
+  var dlist = (S.dmg || []).map(function (d, i) { return { label: 'キズ' + (i + 1), data: d }; });
+  upload(dlist).then(function (dIds) {
+    return upload(plist).then(function (pIds) {
+      return run('apiBoard', [{ carId: D.car.id, name: S.name, check: S.check, damageNote: S.dmgNote || '', damagePhotoIds: dIds, photoIds: pIds, meter: S.meter, oilNext: S.oilNext }]);
+    });
+  }).then(function (res) {
+    var extra = (res.notes || []).map(function (n) { return '<div class="note warn">' + esc(n) + '</div>'; }).join('');
+    if (S.check === '変わっとる') extra += '<div class="note info">キズの報告を管理者に送信しました。ご協力ありがとうございます。</div>';
+    finish('出発を記録しました', '帰着したら、もう一度QRコードを読み取って「帰着を報告する」を押してください。',
+      [['運転者', S.name], ['出発メーター', km(S.meter) + ' km'], ['外観チェック', S.check === '変わっとる' ? 'キズを報告' : S.check === '変わらん' ? '異常なし' : '初回登録'], ['点検写真', (S.photos && Object.keys(S.photos).length) ? '4枚 撮影' : '本日撮影済み']], extra);
+  }).catch(function () {});
+}
+
+/* ---------- 帰着 ---------- */
+function alightMeter() { meterForm(1, 3, '帰着時のメーター', alightIssue); }
+function alightIssue() {
+  S.issue = undefined; S.dmg = [];
+  var h = '<div class="card">' + steps(2, 3) + '<div class="eyebrow">STEP 2 ・ 車両の状態</div><h2>気になる点はありましたか？</h2><p class="lead">小さなこすりキズでも報告をお願いします。</p><div class="stack">';
+  h += '<button class="opt" onclick="S.issue=\'なし\';alightFuel()"><div class="ic" style="background:var(--ok-l);color:var(--ok)">' + IC.check + '</div><div><b>特になし</b><small>キズ・不具合はありません</small></div></button>';
+  h += '<button class="opt" onclick="issueForm(\'ぶつけた・こすった\')"><div class="ic" style="background:var(--ng-l);color:var(--ng)">' + IC.dent + '</div><div><b>ぶつけた・こすった</b><small>写真とひとことで報告</small></div></button>';
+  h += '<button class="opt" onclick="issueForm(\'警告灯・その他\')"><div class="ic" style="background:var(--warn-l);color:var(--warn)">' + IC.light + '</div><div><b>警告灯・その他の不具合</b><small>異音・警告灯など</small></div></button>';
+  view(h + '</div></div>');
+}
+function issueForm(kind) {
+  S.issue = kind; S.dmg = [];
+  var h = '<div class="card">' + steps(2, 3) + '<div class="eyebrow" style="color:var(--ng)">報告</div><h2>' + esc(kind) + '</h2><p class="lead">写真（1〜3枚・なしでも可）と、状況をひとこと。</p><div class="grid2" id="dmgSlots"></div>';
+  h += '<div class="sec">状況</div><textarea class="field" id="isNote" placeholder="例）駐車場で左ミラーをこすった"></textarea>';
+  view(h + '<button class="btn btn-primary" style="margin-top:14px" onclick="S.issueNote=$(\'isNote\').value;alightFuel()">次へ</button></div>');
+  renderDmg();
+}
+function alightFuel() {
+  var h = '<div class="card">' + steps(3, 3) + '<div class="eyebrow">STEP 3 ・ 給油</div><h2>給油はしましたか？</h2><p class="lead">会社のカードで給油した場合に記録します。</p><div class="stack">';
+  h += '<button class="opt" onclick="S.fuel=false;alightSend()"><div class="ic" style="background:var(--bg);color:var(--sub)">' + IC.check + '</div><div><b>給油していない</b></div></button>';
+  h += '<button class="opt" onclick="fuelForm()"><div class="ic" style="background:var(--blue-l);color:var(--blue)">' + IC.fuel + '</div><div><b>給油した</b><small>量を入力（分からなければ空欄）</small></div></button>';
+  view(h + '</div></div>');
+}
+function fuelForm() {
+  S.fuel = true;
+  var h = '<div class="card">' + steps(3, 3) + '<div class="eyebrow">STEP 3 ・ 給油</div><h2>給油量</h2><div class="meterbox"><div class="k">LITERS</div><input id="fuelL" type="number" inputmode="decimal" placeholder="0.0"><div class="row"><span>分からなければ空欄でOK</span><span>L</span></div></div>';
+  if (!D.car.tireDone) {
+    h += '<div class="note info">今月最初の給油です。ガソリンスタンドでタイヤの空気圧を確認しましたか？</div><div class="stack">';
+    h += '<button class="btn btn-ok" onclick="S.tire=\'確認した\';S.fuelL=$(\'fuelL\').value;alightSend()">' + IC.check + '空気圧を確認した</button>';
+    h += '<button class="btn btn-soft" onclick="S.tire=\'まだ\';S.fuelL=$(\'fuelL\').value;alightSend()">まだ確認していない</button></div>';
+  } else h += '<button class="btn btn-primary" onclick="S.fuelL=$(\'fuelL\').value;alightSend()">記録する</button>';
+  view(h + '</div>');
+}
+function alightSend() {
+  var dlist = (S.dmg || []).map(function (d, i) { return { label: '異常' + (i + 1), data: d }; });
+  upload(dlist).then(function (ids) {
+    return run('apiAlight', [{ carId: D.car.id, name: S.name, meter: S.meter, issue: S.issue, issueNote: S.issueNote || '', issuePhotoIds: ids, fuel: !!S.fuel, fuelL: S.fuelL || '', tire: S.tire || '' }]);
+  }).then(function (res) {
+    var extra = S.issue && S.issue !== 'なし' ? '<div class="note info">報告を管理者に送信しました。ありがとうございます。</div>' : '';
+    finish('帰着を記録しました', 'お疲れさまでした。カギをボードに戻してください。',
+      [['運転者', S.name], ['帰着メーター', km(S.meter) + ' km'], ['今回の走行', res.dist ? km(res.dist) + ' km' : '—'], ['給油', S.fuel ? (S.fuelL ? S.fuelL + ' L' : 'あり') : 'なし']], extra);
+  }).catch(function () {});
+}
+
+/* ---------- ステータス ---------- */
+function statusFlow(st) {
+  S.status = st;
+  var h = '<div class="card"><div class="eyebrow" style="color:var(--ng)">車両ステータス</div><h2>「' + esc(st) + '」に変更</h2><p class="lead">分かる範囲で入力してください。</p>';
+  h += '<div class="sec">メーター（任意）</div><input class="field num" id="stMeter" type="number" inputmode="numeric" placeholder="例）52340"><div class="sec">メモ（任意）</div><textarea class="field" id="stMemo" placeholder="例）〇〇自動車へ入庫。11/20 戻り予定"></textarea>';
+  h += '<div class="stack" style="margin-top:14px"><button class="btn btn-primary" onclick="statusSend()">' + IC.wrench + '変更する</button><button class="btn btn-ghost" onclick="home()">戻る</button></div></div>';
+  view(h);
+}
+function statusSend() {
+  run('apiSetStatus', [{ carId: D.car.id, status: S.status, meter: $('stMeter').value, memo: $('stMemo').value }]).then(function () {
+    finish('「' + S.status + '」に変更しました', '戻ってきたら、QRコードを読み取って「運用に戻す」を押してください。', [], '');
+  }).catch(function () {});
+}
+function returnMeter() { meterForm(3, 3, '現在のメーター', returnSend, true); }
+function returnSend() {
+  upload(LABELS.map(function (l) { return { label: l, data: S.photos[l] }; })).then(function (ids) {
+    return run('apiReturn', [{ carId: D.car.id, name: S.name, meter: S.meter, photoIds: ids }]);
+  }).then(function () {
+    finish('運用に戻しました', '撮影した写真が、今後の外観チェックの基準になります。', [['担当', S.name]], '');
+  }).catch(function () {});
+}
+
+function finish(title, body, rows, extra) {
+  var h = '<div class="card done"><div class="check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>' + esc(title) + '</h2><p class="lead" style="margin:0">' + esc(body) + '</p>';
+  if (rows.length) { h += '<div class="summary">'; rows.forEach(function (r) { h += '<div><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>'; }); h += '</div>'; }
+  view(h + (extra || '') + '<button class="btn btn-soft" style="margin-top:12px" onclick="start()">車両画面に戻る</button></div>');
+}
+
+start();
+</script>
+</body>
+</html>
