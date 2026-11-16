@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QRコード印刷｜e-KC 車両運行管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @page { size: A4 portrait; margin: 10mm; }
+  body { font-family: "Noto Sans JP", sans-serif; margin: 0; color: #0f172a; }
+  .bar { position: sticky; top: 0; padding: 12px 16px; background: #0b1f3a; color: #fff; display: flex; align-items: center; gap: 12px; z-index: 5; }
+  .bar button { font: inherit; font-weight: 700; padding: 10px 18px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; }
+  .page { break-after: page; padding: 4mm; }
+  .howto h1 { font-size: 24pt; font-weight: 900; color: #0b1f3a; margin: 0 0 2mm; }
+  .howto .sub { color: #475569; font-size: 12pt; margin-bottom: 6mm; }
+  .step { display: flex; gap: 5mm; border-radius: 4mm; background: #f1f4f9; padding: 5mm; margin-bottom: 4mm; }
+  .step .n { flex: none; width: 12mm; height: 12mm; border-radius: 50%; background: #2563eb; color: #fff; font: 800 16pt Inter; display: grid; place-items: center; }
+  .step b { font-size: 15pt; display: block; margin-bottom: 1mm; }
+  .step p { margin: 0; font-size: 11.5pt; line-height: 1.7; color: #334155; }
+  .step.red .n { background: #dc2626; }
+  .foot { font-size: 11pt; color: #475569; margin-top: 6mm; }
+  .sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .card { border: 1.5px solid #cbd5e1; border-radius: 5mm; overflow: hidden; break-inside: avoid; height: 86mm; display: flex; flex-direction: column; }
+  .card .hd { background: #0b1f3a; color: #fff; padding: 3mm 5mm; display: flex; justify-content: space-between; align-items: center; font-size: 9pt; letter-spacing: .1em; font-weight: 700; }
+  .card .bd { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; }
+  .card .t { font-size: 17pt; font-weight: 900; }
+  .card .p { border: 1.5px solid #1f7a4d; color: #0f5132; border-radius: 1.5mm; padding: 0 3mm; font: 800 12pt Inter, "Noto Sans JP"; }
+  .q { width: 40mm; height: 40mm; margin-top: 1mm; }
+  .q img, .q canvas { width: 40mm !important; height: 40mm !important; }
+  .card .how { font-size: 9pt; color: #475569; padding: 0 0 3mm; text-align: center; }
+  @media print { .bar { display: none; } }
+</style>
+</head>
+<body>
+<div class="bar"><b>印刷用</b><span style="opacity:.8;font-size:14px">1枚目：使い方 ／ 2枚目から：車に貼るQR（A4に6台分）</span><button onclick="window.print()">印刷する</button></div>
+
+<div class="page howto">
+  <h1>社用車は、スマホで「出発」と「帰着」</h1>
+  <div class="sub">カギを取ったら、車内のQRコードをスマホのカメラで読み取るだけ。入力は1回30秒ほどです。</div>
+  <div class="step"><div class="n">1</div><div><b>出発する</b><p>QRを読み取る →「出発する」→ 運転者を選ぶ → 前回の写真と見比べて「異常なし」→ メーターを入力<br>※その日最初に乗る人は、出発前に車を4方向（前・後ろ・右・左）撮影します</p></div></div>
+  <div class="step"><div class="n">2</div><div><b>帰着を報告する</b><p>QRを読み取る →「帰着を報告する」→ メーター → 気になる点（なし／ぶつけた・こすった／警告灯など）→ 給油の有無</p></div></div>
+  <div class="step"><div class="n">3</div><div><b>修理・車検に出すとき</b><p>QRを読み取る →「出発する」→ 下の「車両ステータスを変更」から選ぶ。戻ってきたら「運用に戻す」</p></div></div>
+  <div class="step red"><div class="n">!</div><div><b>キズを見つけたら</b><p>出発前に「新しいキズ・へこみがある」を押して撮影してください。見つけた方が疑われることはありません。</p></div></div>
+  <div class="foot">名前マグネットも、これまで通り貼ってください。ご不明な点は 川口 まで。</div>
+</div>
+
+<div class="page"><div class="sheet" id="sheet">読み込み中…</div></div>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbx_LoK0R7JQwjlY-69BImwaYu-SxX2KcpFEmARzuqao_hDmT0Our6Ytnq3Dcd7ROiUu/exec';
+var BASE = location.href.replace(/qr\.html.*$/, '');
+fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: 'apiCars', args: [] }) })
+  .then(function (r) { return r.json(); })
+  .then(function (j) {
+    var sh = document.getElementById('sheet'); sh.innerHTML = '';
+    j.data.forEach(function (c) {
+      var d = document.createElement('div'); d.className = 'card';
+      d.innerHTML = '<div class="hd"><span>e-KC 車両運行管理</span><span>' + c.id + '</span></div><div class="bd"><div class="t">' + c.name + '</div><div class="p">' + c.plate + '</div><div class="q" id="q' + c.id + '"></div></div><div class="how">出発・帰着のときにスマホのカメラで読み取り</div>';
+      sh.appendChild(d);
+      new QRCode(document.getElementById('q' + c.id), { text: BASE + '?car=' + c.id, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M });
+    });
+  });
+</script>
+</body>
+</html>
