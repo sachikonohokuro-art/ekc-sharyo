@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b1f3a">
+<title>車両管理｜e-KC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b1f3a;--blue:#2563eb;--blue-l:#e8effd;--ink:#0f172a;--sub:#64748b;--line:#e2e8f0;--bg:#f1f4f9;--card:#fff;
+  --ok:#059669;--ok-l:#e7f6f0;--warn:#d97706;--warn-l:#fdf3e2;--ng:#dc2626;--ng-l:#fdecec;--sh:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Noto Sans JP",system-ui,sans-serif}
+.num{font-family:Inter,"Noto Sans JP",sans-serif;font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.top{background:radial-gradient(120% 140% at 100% 0%,#1d4f91 0,rgba(29,79,145,0) 55%),linear-gradient(160deg,#0b1f3a,#122c52);color:#fff;padding:18px max(3vw,16px) 70px}
+.bar{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.ttl{font-weight:700;font-size:15px;letter-spacing:.04em}.ttl span{opacity:.5;margin:0 8px}
+.bar .sp{flex:1}
+.tbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px;text-decoration:none;display:inline-flex;gap:6px;align-items:center}
+.tbtn:hover{background:rgba(255,255,255,.18)}
+.upd{font-size:13px;opacity:.7}
+.wrap{max-width:1280px;margin:-48px auto 40px;padding:0 max(3vw,16px)}
+.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:var(--card);border-radius:16px;padding:16px 18px;box-shadow:var(--sh);display:flex;align-items:center;gap:14px}
+.kpi i{width:12px;height:12px;border-radius:50%;flex:none}
+.kpi b{font-size:30px;line-height:1;font-weight:800}.kpi small{color:var(--sub);font-weight:700;display:block}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:10px 18px;border-radius:12px;font-weight:700;color:var(--sub)}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
+.tab em{font-style:normal;background:var(--ng);color:#fff;border-radius:999px;font-size:12px;padding:1px 7px;margin-left:6px}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--sh);padding:6px 0;overflow:hidden}
+.head{display:flex;align-items:center;gap:10px;padding:14px 18px;flex-wrap:wrap}
+.head h2{margin:0;font-size:18px}.head .sp{flex:1}
+.search{border:1px solid var(--line);border-radius:10px;padding:8px 12px;width:200px;background:#fff}
+.btn{border:0;border-radius:10px;padding:9px 16px;font-weight:700;font-size:14px;display:inline-flex;gap:6px;align-items:center}
+.b-pri{background:var(--blue);color:#fff}.b-pri:hover{background:#1d4ed8}
+.b-soft{background:var(--blue-l);color:var(--blue)}.b-ng{background:var(--ng-l);color:var(--ng)}.b-ghost{background:transparent;color:var(--sub)}
+.btn:disabled{opacity:.5;cursor:default}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;color:var(--sub);font-weight:700;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tr.row{cursor:pointer}tr.row:hover td{background:#f8fafc}
+.r{text-align:right}
+.car b{display:block;font-size:15px}.car small{color:var(--sub)}
+.plate{display:inline-block;border:2px solid #1c6b3f;color:#11462a;border-radius:6px;padding:0 8px;font-weight:700;font-size:13px;background:#fff;white-space:nowrap}
+.st{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 11px;font-weight:700;font-size:13px;white-space:nowrap}
+.st:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-free{background:var(--ok-l);color:var(--ok)}.s-use{background:var(--warn-l);color:var(--warn)}.s-fix{background:var(--ng-l);color:var(--ng)}
+.who b{display:block}.who small{color:var(--sub)}
+.oil{font-weight:700;white-space:nowrap}.oil.o-ng{color:var(--ng)}.oil.o-warn{color:var(--warn)}.oil.o-none{color:var(--sub);font-weight:500}
+.mark{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;font-weight:800;font-size:13px}
+.m-ok{background:var(--ok-l);color:var(--ok)}.m-no{background:#f1f5f9;color:#94a3b8}
+.alert{color:var(--ng);font-weight:700;font-size:13px}
+.empty{padding:40px;text-align:center;color:var(--sub)}
+/* drawer */
+.shade{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--bg);z-index:21;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column}
+.open .shade{display:block}.open .drawer{transform:none}
+.dtop{background:linear-gradient(160deg,#0b1f3a,#122c52);color:#fff;padding:18px 20px;display:flex;gap:12px;align-items:center}
+.dtop h3{margin:0;font-size:22px}.dtop small{opacity:.7}
+.dtop .x{margin-left:auto;background:rgba(255,255,255,.12);border:0;color:#fff;width:38px;height:38px;border-radius:10px;font-size:20px}
+.dbody{overflow:auto;padding:18px 20px 40px;flex:1}
+.box{background:var(--card);border-radius:16px;box-shadow:var(--sh);padding:16px 18px;margin-bottom:16px}
+.box h4{margin:0 0 12px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.f{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;font-size:16px}
+.f:focus,.search:focus{outline:2px solid #93b4f5;border-color:var(--blue)}
+.hint{font-size:12.5px;color:var(--sub);margin-top:4px}
+.acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.log{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.log:last-child{border-bottom:0}.log .t{color:var(--sub);font-size:13px}.log .k{font-weight:700}
+.chip{display:inline-block;background:#f1f5f9;border-radius:6px;padding:0 7px;margin:2px 4px 0 0;font-size:12.5px}
+.chip.ng{background:var(--ng-l);color:var(--ng)}
+.ph{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ph button{border:1px dashed var(--line);background:#f8fafc;border-radius:10px;width:96px;height:72px;padding:0;overflow:hidden;color:var(--sub);font-size:12px}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+/* キズ */
+.dmg{padding:16px 18px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.dmg:last-child{border-bottom:0}
+.dmg h4{margin:0 0 4px;font-size:16px}.dmg .meta{color:var(--sub);font-size:13px}
+.riders{white-space:pre-line;font-size:13.5px;background:#f8fafc;border-radius:10px;padding:8px 10px;margin-top:8px}
+/* ドライバー */
+.people{display:flex;flex-wrap:wrap;gap:10px;padding:6px 18px 18px}
+.pp{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 12px;background:#fff;font-weight:700}
+.pp button{border:0;background:#f1f5f9;border-radius:8px;width:28px;height:28px;color:var(--sub);font-size:16px}
+.pp button:hover{background:var(--ng-l);color:var(--ng)}
+.add{display:flex;gap:8px;padding:0 18px 18px;flex-wrap:wrap}.add .f{max-width:260px}
+/* dialog & toast & login */
+.dlg{position:fixed;inset:0;display:none;place-items:center;background:rgba(15,23,42,.5);z-index:40;padding:16px}
+.dlg.on{display:grid}
+.dlg .in{background:#fff;border-radius:18px;padding:22px;max-width:420px;width:100%;box-shadow:var(--sh)}
+.dlg h4{margin:0 0 8px;font-size:18px}.dlg p{margin:0;color:var(--sub)}
+.big{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.85);z-index:50;padding:20px}
+.big.on{display:grid}.big img{max-width:100%;max-height:90vh;border-radius:12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;z-index:60;display:none}
+.login{max-width:420px;margin:-30px auto 0;background:#fff;border-radius:20px;box-shadow:var(--sh);padding:28px}
+.login h2{margin:0 0 6px}.login p{color:var(--sub);margin:0 0 16px}
+.err{background:var(--ng-l);color:var(--ng);border-radius:10px;padding:10px 12px;margin-top:12px;font-weight:700;display:none}
+.loading{padding:60px;text-align:center;color:var(--sub)}
+@media(max-width:860px){.sum{grid-template-columns:repeat(2,minmax(0,1fr))}.hide-s{display:none}.dmg{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){.search{width:100%}td,th{padding:10px 8px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="bar">
+  <div class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M5 16V11l2-5h10l2 5v5M5 16h14M5 16v2M19 16v2"/><circle cx="8" cy="13" r="1"/><circle cx="16" cy="13" r="1"/></svg></div>
+  <div class="ttl">e-KC<span>|</span>車両管理</div>
+  <div class="sp"></div>
+  <span class="upd" id="upd"></span>
+  <button class="tbtn" id="reload" style="display:none">↻ 最新にする</button>
+  <a class="tbtn" href="qr.html" target="_blank" rel="noopener">QRを印刷</a>
+  <button class="tbtn" id="logout" style="display:none">ログアウト</button>
+</div></header>
+
+<main class="wrap" id="app"><div class="loading">読み込み中…</div></main>
+
+<div id="dw"><div class="shade" id="shade"></div><aside class="drawer" id="drawer"></aside></div>
+<div class="dlg" id="dlg"><div class="in"><h4 id="dlgT"></h4><p id="dlgB"></p><div class="acts" style="justify-content:flex-end"><button class="btn b-ghost" id="dlgNo">やめる</button><button class="btn b-ng" id="dlgYes">消す</button></div></div></div>
+<div class="big" id="big"><img id="bigImg" alt="写真"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+const API = 'https://script.google.com/macros/s/AKfycbx_LoK0R7JQwjlY-69BImwaYu-SxX2KcpFEmARzuqao_hDmT0Our6Ytnq3Dcd7ROiUu/exec';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const km = n => Number(n || 0).toLocaleString('ja-JP');
+let KEY = '', D = null, TAB = 'cars', Q = '', photoCache = {};
+try { KEY = localStorage.getItem('ekcAdminKey') || ''; } catch (e) {}
+
+function api(fn, args) {
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: [KEY].concat(args || []) }) })
+    .then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.msg || 'エラー'); if (j.data && j.data.ok === false) throw new Error(j.data.msg); return j.data; });
+}
+function toast(m) { const t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 2600); }
+function ask(title, body, yes) {
+  $('dlgT').textContent = title; $('dlgB').textContent = body; $('dlg').classList.add('on');
+  $('dlgYes').onclick = () => { $('dlg').classList.remove('on'); yes(); };
+}
+$('dlgNo').onclick = () => $('dlg').classList.remove('on');
+$('big').onclick = () => $('big').classList.remove('on');
+
+/* ---------- ログイン ---------- */
+function login(msg) {
+  $('reload').style.display = $('logout').style.display = 'none'; $('upd').textContent = '';
+  $('app').innerHTML = '<div class="login"><h2>管理ページ</h2><p>合言葉を入れてください。このパソコンでは次から入れんで済みます。</p>' +
+    '<input class="f" id="key" type="password" autocomplete="current-password" placeholder="合言葉"><div class="err" id="lerr"></div>' +
+    '<div class="acts"><button class="btn b-pri" id="go" style="width:100%;justify-content:center;padding:12px">入る</button></div></div>';
+  if (msg) { $('lerr').textContent = msg; $('lerr').style.display = 'block'; }
+  const go = () => { KEY = $('key').value.trim(); if (!KEY) return; $('go').disabled = true;
+    api('adminLogin').then(() => { try { localStorage.setItem('ekcAdminKey', KEY); } catch (e) {} load(); })
+      .catch(e => { $('go').disabled = false; $('lerr').textContent = e.message; $('lerr').style.display = 'block'; }); };
+  $('go').onclick = go; $('key').onkeydown = e => { if (e.key === 'Enter') go(); }; $('key').focus();
+}
+$('logout').onclick = () => { try { localStorage.removeItem('ekcAdminKey'); } catch (e) {} KEY = ''; login(); };
+$('reload').onclick = () => load();
+
+/* ---------- 読み込み ---------- */
+function load() {
+  if (!KEY) { login(); return; }
+  api('adminData').then(d => { D = d; $('reload').style.display = $('logout').style.display = ''; $('upd').textContent = d.updated + ' 時点'; render(); })
+    .catch(e => { if (/合言葉/.test(e.message)) { KEY = ''; login(e.message); } else $('app').innerHTML = '<div class="login"><h2>読み込めませんでした</h2><p>' + esc(e.message) + '</p><button class="btn b-pri" onclick="location.reload()">もう一度</button></div>'; });
+}
+const isFix = s => s !== '空き' && s !== '使用中';
+function oilInfo(c) {
+  if (c.oilNext === '不明') return { t: '不明', cls: 'o-none' };
+  if (!c.oilNext || !c.last) return { t: '未登録', cls: 'o-none' };
+  const left = c.oilNext - c.last, prov = c.oilProv ? '（仮）' : '';
+  if (left <= 0) return { t: km(-left) + 'km 過ぎ' + prov, cls: 'o-ng', alert: true };
+  if (left <= D.warn) return { t: 'あと ' + km(left) + 'km' + prov, cls: 'o-warn', alert: true };
+  return { t: 'あと ' + km(left) + 'km' + prov, cls: '' };
+}
+function stPill(s) { return '<span class="st ' + (s === '空き' ? 's-free' : s === '使用中' ? 's-use' : 's-fix') + '">' + esc(s) + '</span>'; }
+
+function render() {
+  const cars = D.cars;
+  const n = { free: cars.filter(c => c.status === '空き').length, use: cars.filter(c => c.status === '使用中').length, fix: cars.filter(c => isFix(c.status)).length,
+    warn: cars.filter(c => oilInfo(c).alert || (c.status === '使用中' && c.sinceDay && c.sinceDay < D.today)).length };
+  let h = '<div class="sum">' +
+    '<div class="kpi"><i style="background:var(--ok)"></i><div><small>空き</small><b class="num">' + n.free + '</b></div></div>' +
+    '<div class="kpi"><i style="background:var(--warn)"></i><div><small>使用中</small><b class="num">' + n.use + '</b></div></div>' +
+    '<div class="kpi"><i style="background:var(--ng)"></i><div><small>修理・車検など</small><b class="num">' + n.fix + '</b></div></div>' +
+    '<div class="kpi"><i style="background:#7c3aed"></i><div><small>気をつける車</small><b class="num">' + n.warn + '</b></div></div></div>';
+  h += '<div class="tabs"><button class="tab' + (TAB === 'cars' ? ' on' : '') + '" data-t="cars">車の一覧</button>' +
+    '<button class="tab' + (TAB === 'dmg' ? ' on' : '') + '" data-t="dmg">キズの報告' + (D.dmg.length ? '<em>' + D.dmg.length + '</em>' : '') + '</button>' +
+    '<button class="tab' + (TAB === 'people' ? ' on' : '') + '" data-t="people">ドライバー</button></div>';
+  h += TAB === 'cars' ? carsView() : TAB === 'dmg' ? dmgView() : peopleView();
+  $('app').innerHTML = h;
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => { TAB = b.dataset.t; render(); });
+  if (TAB === 'cars') {
+    $('q').oninput = e => { Q = e.target.value; const pos = e.target.selectionStart; render(); $('q').focus(); $('q').setSelectionRange(pos, pos); };
+    $('addCar').onclick = () => openCar(null);
+    document.querySelectorAll('tr.row').forEach(r => r.onclick = () => openCar(r.dataset.id));
+  }
+  if (TAB === 'dmg') bindDmg();
+  if (TAB === 'people') bindPeople();
+}
+
+function carsView() {
+  const q = Q.trim();
+  const list = D.cars.filter(c => !q || (c.name + c.plate + c.id + c.user).indexOf(q) >= 0);
+  let h = '<section class="card"><div class="head"><h2>車の一覧</h2><span class="sp"></span><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
+  if (!list.length) return h + '<div class="empty">見つかりません</div></section>';
+  h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th></tr></thead><tbody>';
+  list.forEach(c => {
+    const o = oilInfo(c), late = c.status === '使用中' && c.sinceDay && c.sinceDay < D.today;
+    h += '<tr class="row" data-id="' + esc(c.id) + '"><td class="car"><b>' + esc(c.name) + '</b><small class="num">' + esc(c.id) + '</small></td>' +
+      '<td><span class="plate">' + esc(c.plate) + '</span></td><td>' + stPill(c.status) + '</td>' +
+      '<td class="who hide-s">' + (c.status === '使用中' ? '<b>' + esc(c.user) + '</b><small>' + esc(c.since) + ' 出発</small>' + (late ? '<div class="alert">降りる入力なし</div>' : '') : '<small>—</small>') + '</td>' +
+      '<td class="r num hide-s">' + (c.last ? km(c.last) : '—') + '</td><td><span class="oil num ' + o.cls + '">' + o.t + '</span></td>' +
+      '<td class="hide-s"><span class="mark ' + (c.tire ? 'm-ok">✓' : 'm-no">—') + '</span></td>' +
+      '<td class="hide-s"><span class="mark ' + (c.photoToday ? 'm-ok">✓' : 'm-no">—') + '</span></td></tr>';
+  });
+  return h + '</tbody></table></section>';
+}
+
+/* ---------- 車の詳しい画面 ---------- */
+function closeDrawer() { document.getElementById('dw').classList.remove('open'); }
+$('shade').onclick = closeDrawer;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawer(); $('big').classList.remove('on'); $('dlg').classList.remove('on'); } });
+
+function openCar(id) {
+  const c = id ? D.cars.filter(x => x.id === id)[0] : { id: '', name: '', plate: '', status: '空き', oilNext: '', last: 0 };
+  const sts = ['空き'].concat(D.statuses);
+  let h = '<div class="dtop"><div><h3>' + (id ? esc(c.name) : '車を足す') + '</h3><small>' + (id ? esc(c.id) + '　' + esc(c.plate) : '新しい車のQRは、足したあと「QRを印刷」から出せます') + '</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
+  h += '<div class="box"><h4>' + (id ? '車の情報を直す' : '新しい車') + '</h4><div class="grid">' +
+    '<div><label for="fName">車の名前</label><input class="f" id="fName" value="' + esc(c.name) + '" placeholder="例）ハイエース 白"></div>' +
+    '<div><label for="fPlate">ナンバー</label><input class="f" id="fPlate" value="' + esc(c.plate) + '" placeholder="例）愛媛400と5081"></div>' +
+    '<div><label for="fOil">次のオイル交換（km）</label><input class="f num" id="fOil" inputmode="numeric" value="' + (c.oilNext && c.oilNext !== '不明' ? c.oilNext : '') + '" placeholder="シールの「次回交換km」"><div class="hint">' + (c.oilProv ? 'いまは仮の距離です。シールの数字を入れると仮が外れます' : '空にすると、次に乗る人にシールの数字を聞きます') + '</div></div>';
+  if (id) h += '<div><label for="fSt">状態</label><select class="f" id="fSt">' + (c.status === '使用中' ? '<option selected>使用中</option>' : '') + sts.map(s => '<option' + (s === c.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select><div class="hint">' + (c.status === '使用中' ? esc(c.user) + 'さんが使用中。変えると「降りる」を代わりに終わらせます' : 'メーター ' + km(c.last) + ' km') + '</div></div>';
+  h += '</div><div class="acts"><button class="btn b-pri" id="save">' + (id ? '保存する' : '車を足す') + '</button>' + (id ? '<span style="flex:1"></span><button class="btn b-ng" id="del">この車を消す</button>' : '') + '</div></div>';
+  if (id) h += '<div class="box"><h4>これまでの記録</h4><div id="logs" class="loading" style="padding:20px">読み込み中…</div></div>';
+  h += '</div>';
+  $('drawer').innerHTML = h; document.getElementById('dw').classList.add('open');
+  $('dx').onclick = closeDrawer;
+  $('save').onclick = () => {
+    const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '' };
+    if (!p.name.trim()) { toast('車の名前を入れてください'); return; }
+    if (id && p.status === '使用中') p.status = '';
+    $('save').disabled = true;
+    api('adminSaveCar', [p]).then(r => { toast(id ? '保存しました' : r.id + ' として足しました'); closeDrawer(); load(); })
+      .catch(e => { $('save').disabled = false; toast(e.message); });
+  };
+  if (!id) { $('fName').focus(); return; }
+  $('del').onclick = () => ask('「' + c.name + '」を消しますか？', 'この車は一覧と入力画面から消えます。これまでの記録は表に残ります。貼ってあるQRは使えんようになります。', () => {
+    api('adminDeleteCar', [id]).then(() => { toast('消しました'); closeDrawer(); load(); }).catch(e => toast(e.message));
+  });
+  api('adminCarLog', [id]).then(list => {
+    if (!list.length) { $('logs').className = ''; $('logs').innerHTML = '<div class="empty" style="padding:20px">まだ記録がありません</div>'; return; }
+    $('logs').className = '';
+    $('logs').innerHTML = list.map(l => {
+      const chips = [];
+      if (l.meter) chips.push('<span class="chip num">' + km(l.meter) + ' km</span>');
+      if (l.dist) chips.push('<span class="chip num">走行 ' + km(l.dist) + ' km</span>');
+      if (l.check) chips.push('<span class="chip' + (l.check === '変わっとる' ? ' ng' : '') + '">外観 ' + esc(l.check === '変わらん' ? '異常なし' : l.check === '変わっとる' ? 'キズあり' : l.check) + '</span>');
+      if (l.issue && l.issue !== 'なし') chips.push('<span class="chip ng">' + esc(l.issue) + '</span>');
+      if (l.fuel) chips.push('<span class="chip">給油 ' + esc(l.fuel) + (/^\d/.test(String(l.fuel)) ? 'L' : '') + '</span>');
+      if (l.tire) chips.push('<span class="chip">タイヤ ' + esc(l.tire) + '</span>');
+      return '<div class="log"><div class="t num">' + esc(l.at) + '</div><div><span class="k">' + esc(l.kind) + '</span>' + (l.name ? '　' + esc(l.name) : '') +
+        '<div>' + chips.join('') + '</div>' + (l.memo ? '<div class="hint">' + esc(l.memo) + '</div>' : '') + photoBtns(l.photos) + '</div></div>';
+    }).join('');
+    bindPhotos($('logs'));
+  }).catch(e => { $('logs').innerHTML = '<div class="err" style="display:block">' + esc(e.message) + '</div>'; });
+}
+
+/* ---------- 写真 ---------- */
+function photoBtns(ids) { return ids && ids.length ? '<div class="ph">' + ids.map((p, i) => '<button data-p="' + esc(p) + '">写真' + (i + 1) + '<br>を見る</button>').join('') + '</div>' : ''; }
+function bindPhotos(root) {
+  root.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+    const id = b.dataset.p;
+    const show = src => { b.innerHTML = '<img src="' + src + '" alt="写真">'; b.onclick = () => { $('bigImg').src = src; $('big').classList.add('on'); }; };
+    if (photoCache[id]) { show(photoCache[id]); return; }
+    b.textContent = '読み込み中…';
+    api('adminPhoto', [id]).then(src => { photoCache[id] = src; show(src); }).catch(() => { b.textContent = '開けません'; });
+  });
+}
+
+/* ---------- キズ ---------- */
+function dmgView() {
+  let h = '<section class="card"><div class="head"><h2>キズの報告</h2><span class="hint">新しい順</span></div>';
+  if (!D.dmg.length) return h + '<div class="empty">キズの報告はまだありません</div></section>';
+  D.dmg.forEach(d => {
+    h += '<div class="dmg"><div><h4>' + esc(d.car) + '</h4><div class="meta num">' + esc(d.at) + '　見つけた人：' + esc(d.finder) + '（' + esc(d.how) + '）</div>' +
+      (d.note ? '<div style="margin-top:6px">' + esc(d.note) + '</div>' : '') + photoBtns(d.photos) +
+      '<div class="riders"><b>写真のあとに乗った人</b>\n' + esc(d.riders) + '</div></div>' +
+      '<div><label for="m' + d.row + '">対応メモ</label><textarea class="f" id="m' + d.row + '" rows="4" placeholder="例）11/18 〇〇自動車で見積もり。本人に確認済み">' + esc(d.memo) + '</textarea>' +
+      '<div class="acts"><button class="btn b-soft" data-row="' + d.row + '">メモを保存</button></div></div></div>';
+  });
+  return h + '</section>';
+}
+function bindDmg() {
+  bindPhotos($('app'));
+  document.querySelectorAll('[data-row]').forEach(b => b.onclick = () => {
+    const row = Number(b.dataset.row), memo = $('m' + row).value; b.disabled = true;
+    api('adminDmgMemo', [row, memo]).then(() => { D.dmg.forEach(d => { if (d.row === row) d.memo = memo; }); b.disabled = false; toast('メモを保存しました'); })
+      .catch(e => { b.disabled = false; toast(e.message); });
+  });
+}
+
+/* ---------- ドライバー ---------- */
+function peopleView() {
+  return '<section class="card"><div class="head"><h2>ドライバー</h2><span class="hint">' + D.people.length + '人。入力画面の名前の一覧に、この順で出ます</span></div>' +
+    '<div class="people">' + D.people.map(p => '<span class="pp">' + esc(p) + '<button data-del="' + esc(p) + '" aria-label="' + esc(p) + 'を消す">×</button></span>').join('') + '</div>' +
+    '<div class="add"><input class="f" id="np" placeholder="足す人の名前（例：山田）"><button class="btn b-pri" id="npAdd">＋ 足す</button></div></section>';
+}
+function bindPeople() {
+  const add = () => { const n = $('np').value.trim(); if (!n) return; $('npAdd').disabled = true;
+    api('adminAddName', [n]).then(() => { D.people.push(n); toast(n + 'さんを足しました'); render(); $('np').focus(); })
+      .catch(e => { $('npAdd').disabled = false; toast(e.message); }); };
+  $('npAdd').onclick = add; $('np').onkeydown = e => { if (e.key === 'Enter') add(); };
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    const n = b.dataset.del;
+    ask(n + 'さんを消しますか？', '入力画面の名前の一覧から消えます。これまでの記録は残ります。', () => {
+      api('adminDeleteName', [n]).then(() => { D.people = D.people.filter(x => x !== n); toast('消しました'); render(); }).catch(e => toast(e.message));
+    });
+  });
+}
+
+load();
+}
+</script>
+</body>
+</html>
