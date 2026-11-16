@@ -58,6 +58,8 @@ tr.row{cursor:pointer}tr.row:hover td{background:#f8fafc}
 .mark{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;font-weight:800;font-size:13px}
 .m-ok{background:var(--ok-l);color:var(--ok)}.m-no{background:#f1f5f9;color:#94a3b8}
 .alert{color:var(--ng);font-weight:700;font-size:13px}
+.edit{padding:6px 12px;white-space:nowrap}
+tr.row:hover .edit{background:var(--blue);color:#fff}
 .empty{padding:40px;text-align:center;color:var(--sub)}
 /* drawer */
 .shade{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:20}
@@ -67,6 +69,8 @@ tr.row{cursor:pointer}tr.row:hover td{background:#f8fafc}
 .dtop h3{margin:0;font-size:22px}.dtop small{opacity:.7}
 .dtop .x{margin-left:auto;background:rgba(255,255,255,.12);border:0;color:#fff;width:38px;height:38px;border-radius:10px;font-size:20px}
 .dbody{overflow:auto;padding:18px 20px 40px;flex:1}
+.dback{background:#fff;color:var(--navy);border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;flex:none}
+.dback:hover{background:#e8effd}
 .box{background:var(--card);border-radius:16px;box-shadow:var(--sh);padding:16px 18px;margin-bottom:16px}
 .box h4{margin:0 0 12px;font-size:15px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -209,7 +213,7 @@ function carsView() {
   const list = D.cars.filter(c => !q || (c.name + c.plate + c.id + c.user).indexOf(q) >= 0);
   let h = '<section class="card"><div class="head"><h2>車の一覧</h2><span class="sp"></span><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
   if (!list.length) return h + '<div class="empty">見つかりません</div></section>';
-  h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th></tr></thead><tbody>';
+  h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
   list.forEach(c => {
     const o = oilInfo(c), late = c.status === '使用中' && c.sinceDay && c.sinceDay < D.today;
     h += '<tr class="row" data-id="' + esc(c.id) + '"><td class="car"><b>' + esc(c.name) + '</b><small class="num">' + esc(c.id) + '</small></td>' +
@@ -217,20 +221,21 @@ function carsView() {
       '<td class="who hide-s">' + (c.status === '使用中' ? '<b>' + esc(c.user) + '</b><small>' + esc(c.since) + ' 出発</small>' + (late ? '<div class="alert">降りる入力なし</div>' : '') : '<small>—</small>') + '</td>' +
       '<td class="r num hide-s">' + (c.last ? km(c.last) : '—') + '</td><td><span class="oil num ' + o.cls + '">' + o.t + '</span></td>' +
       '<td class="hide-s"><span class="mark ' + (c.tire ? 'm-ok">✓' : 'm-no">—') + '</span></td>' +
-      '<td class="hide-s"><span class="mark ' + (c.photoToday ? 'm-ok">✓' : 'm-no">—') + '</span></td></tr>';
+      '<td class="hide-s"><span class="mark ' + (c.photoToday ? 'm-ok">✓' : 'm-no">—') + '</span></td><td class="r"><span class="btn b-soft edit">直す ›</span></td></tr>';
   });
   return h + '</tbody></table></section>';
 }
 
 /* ---------- 車の詳しい画面 ---------- */
-function closeDrawer() { document.getElementById('dw').classList.remove('open'); }
+function closeDrawer() { const w = document.getElementById('dw'); if (!w.classList.contains('open')) return; w.classList.remove('open'); if (history.state && history.state.dw) history.back(); }
+window.addEventListener('popstate', () => document.getElementById('dw').classList.remove('open'));
 $('shade').onclick = closeDrawer;
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawer(); $('big').classList.remove('on'); $('dlg').classList.remove('on'); } });
 
 function openCar(id) {
   const c = id ? D.cars.filter(x => x.id === id)[0] : { id: '', name: '', plate: '', status: '空き', oilNext: '', last: 0 };
   const sts = ['空き'].concat(D.statuses);
-  let h = '<div class="dtop"><div><h3>' + (id ? esc(c.name) : '車を足す') + '</h3><small>' + (id ? esc(c.id) + '　' + esc(c.plate) : '新しい車のQRは、足したあと「QRを印刷」から出せます') + '</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
+  let h = '<div class="dtop"><button class="dback" id="dback">← 一覧に戻る</button><div><h3>' + (id ? esc(c.name) : '車を足す') + '</h3><small>' + (id ? esc(c.id) + '　' + esc(c.plate) : '新しい車のQRは、足したあと「QRを印刷」から出せます') + '</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
   h += '<div class="box"><h4>' + (id ? '車の情報を直す' : '新しい車') + '</h4><div class="grid">' +
     '<div><label for="fName">車の名前</label><input class="f" id="fName" value="' + esc(c.name) + '" placeholder="例）ハイエース 白"></div>' +
     '<div><label for="fPlate">ナンバー</label><input class="f" id="fPlate" value="' + esc(c.plate) + '" placeholder="例）愛媛400と5081"></div>' +
@@ -238,9 +243,10 @@ function openCar(id) {
   if (id) h += '<div><label for="fSt">状態</label><select class="f" id="fSt">' + (c.status === '使用中' ? '<option selected>使用中</option>' : '') + sts.map(s => '<option' + (s === c.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select><div class="hint">' + (c.status === '使用中' ? esc(c.user) + 'さんが使用中。変えると「降りる」を代わりに終わらせます' : 'メーター ' + km(c.last) + ' km') + '</div></div>';
   h += '</div><div class="acts"><button class="btn b-pri" id="save">' + (id ? '保存する' : '車を足す') + '</button>' + (id ? '<span style="flex:1"></span><button class="btn b-ng" id="del">この車を消す</button>' : '') + '</div></div>';
   if (id) h += '<div class="box"><h4>これまでの記録</h4><div id="logs" class="loading" style="padding:20px">読み込み中…</div></div>';
-  h += '</div>';
-  $('drawer').innerHTML = h; document.getElementById('dw').classList.add('open');
-  $('dx').onclick = closeDrawer;
+  h += '<button class="btn b-soft" id="dback2" style="width:100%;justify-content:center;padding:12px">← 一覧に戻る</button></div>';
+  $('drawer').innerHTML = h;
+  if (!document.getElementById('dw').classList.contains('open')) { document.getElementById('dw').classList.add('open'); history.pushState({ dw: 1 }, ''); }
+  $('dx').onclick = $('dback').onclick = $('dback2').onclick = closeDrawer;
   $('save').onclick = () => {
     const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '' };
     if (!p.name.trim()) { toast('車の名前を入れてください'); return; }
