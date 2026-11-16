@@ -182,12 +182,21 @@ function oilInfo(c) {
   if (left <= D.warn) return { t: 'あと ' + km(left) + 'km' + prov, cls: 'o-warn', alert: true };
   return { t: 'あと ' + km(left) + 'km' + prov, cls: '' };
 }
+function shakenInfo(c) {
+  const d = c.shakenDays;
+  if (d === null || d === undefined || !c.shaken) return { t: '未登録', cls: 'o-none' };
+  if (d < 0) return { t: (-d) + '日 過ぎ', cls: 'o-ng', alert: true };
+  if (d === 0) return { t: '今日まで', cls: 'o-ng', alert: true };
+  if (d <= 14) return { t: 'あと ' + d + '日', cls: 'o-ng', alert: true };
+  if (d <= 60) return { t: 'あと ' + d + '日', cls: 'o-warn', alert: d <= 30 };
+  return { t: 'あと ' + d + '日', cls: '' };
+}
 function stPill(s) { return '<span class="st ' + (s === '空き' ? 's-free' : s === '使用中' ? 's-use' : 's-fix') + '">' + esc(s) + '</span>'; }
 
 function render() {
   const cars = D.cars;
   const n = { free: cars.filter(c => c.status === '空き').length, use: cars.filter(c => c.status === '使用中').length, fix: cars.filter(c => isFix(c.status)).length,
-    warn: cars.filter(c => oilInfo(c).alert || (c.status === '使用中' && c.sinceDay && c.sinceDay < D.today)).length };
+    warn: cars.filter(c => oilInfo(c).alert || shakenInfo(c).alert || (c.status === '使用中' && c.sinceDay && c.sinceDay < D.today)).length };
   let h = '<div class="sum">' +
     '<div class="kpi"><i style="background:var(--ok)"></i><div><small>空き</small><b class="num">' + n.free + '</b></div></div>' +
     '<div class="kpi"><i style="background:var(--warn)"></i><div><small>使用中</small><b class="num">' + n.use + '</b></div></div>' +
@@ -213,13 +222,14 @@ function carsView() {
   const list = D.cars.filter(c => !q || (c.name + c.plate + c.id + c.user).indexOf(q) >= 0);
   let h = '<section class="card"><div class="head"><h2>車の一覧</h2><span class="sp"></span><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
   if (!list.length) return h + '<div class="empty">見つかりません</div></section>';
-  h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
+  h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th>車検まで</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
   list.forEach(c => {
     const o = oilInfo(c), late = c.status === '使用中' && c.sinceDay && c.sinceDay < D.today;
     h += '<tr class="row" data-id="' + esc(c.id) + '"><td class="car"><b>' + esc(c.name) + '</b><small class="num">' + esc(c.id) + '</small></td>' +
       '<td><span class="plate">' + esc(c.plate) + '</span></td><td>' + stPill(c.status) + '</td>' +
       '<td class="who hide-s">' + (c.status === '使用中' ? '<b>' + esc(c.user) + '</b><small>' + esc(c.since) + ' 出発</small>' + (late ? '<div class="alert">降りる入力なし</div>' : '') : '<small>—</small>') + '</td>' +
       '<td class="r num hide-s">' + (c.last ? km(c.last) : '—') + '</td><td><span class="oil num ' + o.cls + '">' + o.t + '</span></td>' +
+      '<td>' + (function () { const s = shakenInfo(c); return '<span class="oil num ' + s.cls + '">' + s.t + '</span>' + (c.shaken ? '<div class="hint num">' + esc(c.shaken.slice(0, 4) + '/' + Number(c.shaken.slice(5, 7)) + '/' + Number(c.shaken.slice(8, 10))) + 'まで</div>' : ''); })() + '</td>' +
       '<td class="hide-s"><span class="mark ' + (c.tire ? 'm-ok">✓' : 'm-no">—') + '</span></td>' +
       '<td class="hide-s"><span class="mark ' + (c.photoToday ? 'm-ok">✓' : 'm-no">—') + '</span></td><td class="r"><span class="btn b-soft edit">直す ›</span></td></tr>';
   });
@@ -233,13 +243,14 @@ $('shade').onclick = closeDrawer;
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawer(); $('big').classList.remove('on'); $('dlg').classList.remove('on'); } });
 
 function openCar(id) {
-  const c = id ? D.cars.filter(x => x.id === id)[0] : { id: '', name: '', plate: '', status: '空き', oilNext: '', last: 0 };
+  const c = id ? D.cars.filter(x => x.id === id)[0] : { id: '', name: '', plate: '', status: '空き', oilNext: '', last: 0, shaken: '' };
   const sts = ['空き'].concat(D.statuses);
   let h = '<div class="dtop"><button class="dback" id="dback">← 一覧に戻る</button><div><h3>' + (id ? esc(c.name) : '車を足す') + '</h3><small>' + (id ? esc(c.id) + '　' + esc(c.plate) : '新しい車のQRは、足したあと「QRを印刷」から出せます') + '</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
   h += '<div class="box"><h4>' + (id ? '車の情報を直す' : '新しい車') + '</h4><div class="grid">' +
     '<div><label for="fName">車の名前</label><input class="f" id="fName" value="' + esc(c.name) + '" placeholder="例）ハイエース 白"></div>' +
     '<div><label for="fPlate">ナンバー</label><input class="f" id="fPlate" value="' + esc(c.plate) + '" placeholder="例）愛媛400と5081"></div>' +
     '<div><label for="fOil">次のオイル交換（km）</label><input class="f num" id="fOil" inputmode="numeric" value="' + (c.oilNext && c.oilNext !== '不明' ? c.oilNext : '') + '" placeholder="シールの「次回交換km」"><div class="hint">' + (c.oilProv ? 'いまは仮の距離です。シールの数字を入れると仮が外れます' : '空にすると、次に乗る人にシールの数字を聞きます') + '</div></div>';
+  h += '<div><label for="fShaken">車検の期限</label><input class="f num" id="fShaken" type="date" value="' + esc(c.shaken || '') + '"><div class="hint">車検証の「有効期間の満了する日」。60・30・14・7日前と前日、過ぎたら毎朝LINEで知らせます</div></div>';
   if (id) h += '<div><label for="fSt">状態</label><select class="f" id="fSt">' + (c.status === '使用中' ? '<option selected>使用中</option>' : '') + sts.map(s => '<option' + (s === c.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select><div class="hint">' + (c.status === '使用中' ? esc(c.user) + 'さんが使用中。変えると「降りる」を代わりに終わらせます' : 'メーター ' + km(c.last) + ' km') + '</div></div>';
   h += '</div><div class="acts"><button class="btn b-pri" id="save">' + (id ? '保存する' : '車を足す') + '</button>' + (id ? '<span style="flex:1"></span><button class="btn b-ng" id="del">この車を消す</button>' : '') + '</div></div>';
   if (id) h += '<div class="box"><h4>これまでの記録</h4><div id="logs" class="loading" style="padding:20px">読み込み中…</div></div>';
@@ -248,7 +259,7 @@ function openCar(id) {
   if (!document.getElementById('dw').classList.contains('open')) { document.getElementById('dw').classList.add('open'); history.pushState({ dw: 1 }, ''); }
   $('dx').onclick = $('dback').onclick = $('dback2').onclick = closeDrawer;
   $('save').onclick = () => {
-    const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '' };
+    const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '', shaken: $('fShaken').value };
     if (!p.name.trim()) { toast('車の名前を入れてください'); return; }
     if (id && p.status === '使用中') p.status = '';
     $('save').disabled = true;
