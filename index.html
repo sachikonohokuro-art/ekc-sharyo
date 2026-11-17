@@ -438,12 +438,12 @@ function alightSend() {
 function statusFlow(st) {
   S.status = st;
   var h = '<div class="card"><div class="eyebrow" style="color:var(--ng)">車両ステータス</div><h2>「' + esc(st) + '」に変更</h2><p class="lead">分かる範囲で入力してください。</p>';
-  h += '<div class="sec">メーター（任意）</div><input class="field num" id="stMeter" type="number" inputmode="numeric" placeholder="例）52340"><div class="sec">備考（修理先・期間など・任意）</div><textarea class="field" id="stMemo" placeholder="例）〇〇自動車へ入庫。11/18〜11/25の予定"></textarea>';
+  h += '<div class="sec">メーター（任意）</div><input class="field num" id="stMeter" type="number" inputmode="numeric" placeholder="例）52340"><div class="sec">備考（修理先・期間など・任意）</div><textarea class="field" id="stMemo" placeholder="例）〇〇自動車へ入庫。11/18〜11/25の予定"></textarea><div class="sec">戻り予定日（任意）</div><input class="field num" id="stBack" type="date">';
   h += '<div class="stack" style="margin-top:14px"><button class="btn btn-primary" onclick="statusSend()">' + IC.wrench + '変更する</button><button class="btn btn-ghost" onclick="home()">戻る</button></div></div>';
   view(h);
 }
 function statusSend() {
-  run('apiSetStatus', [{ carId: D.car.id, status: S.status, meter: $('stMeter').value, memo: $('stMemo').value }]).then(function () {
+  run('apiSetStatus', [{ carId: D.car.id, status: S.status, meter: $('stMeter').value, memo: $('stMemo').value, back: $('stBack').value }]).then(function () {
     finish('「' + S.status + '」に変更しました', '戻ってきたら、QRコードを読み取って「運用に戻す」を押してください。', [], '');
   }).catch(function () {});
 }
