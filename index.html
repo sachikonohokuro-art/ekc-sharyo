@@ -212,7 +212,7 @@ function home() {
   var oilPct = oilLeft === null ? 0 : Math.max(0, Math.min(100, 100 - oilLeft / 50));
   var h = '<div class="card"><div class="status-row"><span class="chip ' + sv[1] + (sv[2] ? ' live' : '') + '"><i></i>' + esc(sv[0]) + '</span><div class="since">';
   if (c.status === '使用中') h += '<b>' + esc(c.user) + '</b> さん<br>' + esc(c.since) + ' 出発';
-  else if (c.status !== '空き') h += esc(c.since) + ' から';
+  else if (c.status !== '空き') h += esc(c.since) + ' から' + (c.note ? '<br>' + esc(c.note) : '');
   else h += '出発できます';
   h += '</div></div><div class="stats">';
   h += '<div class="stat"><div class="k">走行距離</div><div class="v num">' + (c.lastMeter ? km(c.lastMeter) + '<small>km</small>' : '—') + '</div></div>';
@@ -438,7 +438,7 @@ function alightSend() {
 function statusFlow(st) {
   S.status = st;
   var h = '<div class="card"><div class="eyebrow" style="color:var(--ng)">車両ステータス</div><h2>「' + esc(st) + '」に変更</h2><p class="lead">分かる範囲で入力してください。</p>';
-  h += '<div class="sec">メーター（任意）</div><input class="field num" id="stMeter" type="number" inputmode="numeric" placeholder="例）52340"><div class="sec">メモ（任意）</div><textarea class="field" id="stMemo" placeholder="例）〇〇自動車へ入庫。11/20 戻り予定"></textarea>';
+  h += '<div class="sec">メーター（任意）</div><input class="field num" id="stMeter" type="number" inputmode="numeric" placeholder="例）52340"><div class="sec">備考（修理先・期間など・任意）</div><textarea class="field" id="stMemo" placeholder="例）〇〇自動車へ入庫。11/18〜11/25の予定"></textarea>';
   h += '<div class="stack" style="margin-top:14px"><button class="btn btn-primary" onclick="statusSend()">' + IC.wrench + '変更する</button><button class="btn btn-ghost" onclick="home()">戻る</button></div></div>';
   view(h);
 }
