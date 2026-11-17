@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1f3a">
-<title>e-KC 車両運行管理</title>
+<title>e-KC group 車両運行管理</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -132,7 +132,7 @@ textarea.field{min-height:84px;resize:vertical}
 </head>
 <body>
 <header class="top">
-  <div class="brand"><div class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v4a1 1 0 0 1-1 1h-1"/><path d="M5 18H4a1 1 0 0 1-1-1v-4h18"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg></div>e-KC<span class="sep">|</span>車両運行管理</div>
+  <div class="brand"><div class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v4a1 1 0 0 1-1 1h-1"/><path d="M5 18H4a1 1 0 0 1-1-1v-4h18"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg></div>e-KC group<span class="sep">|</span>車両運行管理</div>
   <div class="hero"><div><div class="kind" id="hKind">VEHICLE</div><h1 id="hName">読み込み中</h1></div><div class="plate" id="hPlate" style="display:none"><small>NO.</small><b id="hPlateNo"></b></div></div>
 </header>
 <main id="app"></main>
@@ -195,7 +195,7 @@ function head() {
   var c = D.car;
   $('hName').textContent = c.name; $('hKind').textContent = 'VEHICLE ' + c.id;
   $('hPlateNo').textContent = c.plate; $('hPlate').style.display = '';
-  document.title = c.name + '｜e-KC 車両運行管理';
+  document.title = c.name + '｜e-KC group 車両運行管理';
 }
 function pickCar() {
   $('hName').textContent = '車両を選択'; $('hKind').textContent = 'SELECT';
@@ -236,7 +236,7 @@ function home() {
     h += '<button class="btn btn-primary" onclick="askName(\'return\')">' + IC.wrench + '運用に戻す（' + esc(c.status) + '）</button>';
     h += '<button class="btn btn-soft" onclick="askName(\'board\')">' + IC.key + 'このまま出発する</button>';
   }
-  view(h + '</div><div class="foot">e-KC FLEET LOG</div>');
+  view(h + '</div><div class="foot">e-KC GROUP FLEET LOG</div>');
 }
 
 /* ---------- 運転者 ---------- */

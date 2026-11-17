@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QRコード印刷｜e-KC 車両運行管理</title>
+<title>QRコード印刷｜e-KC group 車両運行管理</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -56,7 +56,7 @@ fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-
     var sh = document.getElementById('sheet'); sh.innerHTML = '';
     j.data.forEach(function (c) {
       var d = document.createElement('div'); d.className = 'card';
-      d.innerHTML = '<div class="hd"><span>e-KC 車両運行管理</span><span>' + c.id + '</span></div><div class="bd"><div class="t">' + c.name + '</div><div class="p">' + c.plate + '</div><div class="q" id="q' + c.id + '"></div></div><div class="how">出発・帰着のときにスマホのカメラで読み取り</div>';
+      d.innerHTML = '<div class="hd"><span>e-KC group 車両運行管理</span><span>' + c.id + '</span></div><div class="bd"><div class="t">' + c.name + '</div><div class="p">' + c.plate + '</div><div class="q" id="q' + c.id + '"></div></div><div class="how">出発・帰着のときにスマホのカメラで読み取り</div>';
       sh.appendChild(d);
       new QRCode(document.getElementById('q' + c.id), { text: BASE + '?car=' + c.id, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M });
     });
