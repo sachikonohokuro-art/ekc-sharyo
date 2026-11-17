@@ -93,6 +93,7 @@ label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-botto
 .dmg:last-child{border-bottom:0}
 .dmg h4{margin:0 0 4px;font-size:16px}.dmg .meta{color:var(--sub);font-size:13px}
 .riders{white-space:pre-line;font-size:13.5px;background:#f8fafc;border-radius:10px;padding:8px 10px;margin-top:8px}
+.kpi{cursor:pointer;transition:box-shadow .15s,transform .15s}.kpi:hover{transform:translateY(-2px)}.kpi.on{box-shadow:0 0 0 3px var(--blue),var(--sh)}
 /* 整備・手続き */
 .mt td{vertical-align:top}.mt .d{white-space:nowrap}.mt .left{font-weight:700;white-space:nowrap}
 .left.ng{color:var(--ng)}.left.warn{color:var(--warn)}
@@ -148,7 +149,10 @@ const API = 'https://script.google.com/macros/s/AKfycbx_LoK0R7JQwjlY-69BImwaYu-S
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const km = n => Number(n || 0).toLocaleString('ja-JP');
-let KEY = '', D = null, TAB = 'cars', Q = '', photoCache = {}, M = null, MF = { car: '', type: '', year: '' };
+let KEY = '', D = null, TAB = 'cars', Q = '', photoCache = {}, M = null, MF = { car: '', type: '', year: '' }, KF = '';
+const KFL = { free: '空き', use: '使用中', fix: '修理・車検など', warn: '気をつける車' };
+function isWarn(c) { return oilInfo(c).alert || shakenInfo(c).alert || (dueInfo(c.tenkenDays, 30) || {}).alert || (dueInfo(c.hokenDays, 30) || {}).alert || (c.status === '使用中' && c.sinceDay && c.sinceDay < D.today); }
+function kfMatch(c) { return !KF || (KF === 'free' ? c.status === '空き' : KF === 'use' ? c.status === '使用中' : KF === 'fix' ? isFix(c.status) : isWarn(c)); }
 try { KEY = localStorage.getItem('ekcAdminKey') || ''; } catch (e) {}
 
 function api(fn, args) {
@@ -211,12 +215,12 @@ function stPill(s) { return '<span class="st ' + (s === '空き' ? 's-free' : s 
 function render() {
   const cars = D.cars;
   const n = { free: cars.filter(c => c.status === '空き').length, use: cars.filter(c => c.status === '使用中').length, fix: cars.filter(c => isFix(c.status)).length,
-    warn: cars.filter(c => oilInfo(c).alert || shakenInfo(c).alert || (dueInfo(c.tenkenDays, 30) || {}).alert || (dueInfo(c.hokenDays, 30) || {}).alert || (c.status === '使用中' && c.sinceDay && c.sinceDay < D.today)).length };
+    warn: cars.filter(isWarn).length };
   let h = '<div class="sum">' +
-    '<div class="kpi"><i style="background:var(--ok)"></i><div><small>空き</small><b class="num">' + n.free + '</b></div></div>' +
-    '<div class="kpi"><i style="background:var(--warn)"></i><div><small>使用中</small><b class="num">' + n.use + '</b></div></div>' +
-    '<div class="kpi"><i style="background:var(--ng)"></i><div><small>修理・車検など</small><b class="num">' + n.fix + '</b></div></div>' +
-    '<div class="kpi"><i style="background:#7c3aed"></i><div><small>気をつける車</small><b class="num">' + n.warn + '</b></div></div></div>';
+    '<div class="kpi' + (KF === 'free' ? ' on' : '') + '" data-k="free" title="クリックで、この車だけ表示"><i style="background:var(--ok)"></i><div><small>空き</small><b class="num">' + n.free + '</b></div></div>' +
+    '<div class="kpi' + (KF === 'use' ? ' on' : '') + '" data-k="use" title="クリックで、この車だけ表示"><i style="background:var(--warn)"></i><div><small>使用中</small><b class="num">' + n.use + '</b></div></div>' +
+    '<div class="kpi' + (KF === 'fix' ? ' on' : '') + '" data-k="fix" title="クリックで、この車だけ表示"><i style="background:var(--ng)"></i><div><small>修理・車検など</small><b class="num">' + n.fix + '</b></div></div>' +
+    '<div class="kpi' + (KF === 'warn' ? ' on' : '') + '" data-k="warn" title="クリックで、この車だけ表示"><i style="background:#7c3aed"></i><div><small>気をつける車</small><b class="num">' + n.warn + '</b></div></div></div>';
   h += '<div class="tabs"><button class="tab' + (TAB === 'cars' ? ' on' : '') + '" data-t="cars">車の一覧</button>' +
     '<button class="tab' + (TAB === 'dmg' ? ' on' : '') + '" data-t="dmg">キズの報告' + (D.dmg.length ? '<em>' + D.dmg.length + '</em>' : '') + '</button>' +
     '<button class="tab' + (TAB === 'mnt' ? ' on' : '') + '" data-t="mnt">整備・手続き</button>' +
@@ -224,6 +228,8 @@ function render() {
   h += TAB === 'cars' ? carsView() : TAB === 'dmg' ? dmgView() : TAB === 'mnt' ? mntView() : peopleView();
   $('app').innerHTML = h;
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => { TAB = b.dataset.t; render(); });
+  document.querySelectorAll('.kpi[data-k]').forEach(b => b.onclick = () => { KF = KF === b.dataset.k ? '' : b.dataset.k; TAB = 'cars'; render(); });
+  if ($('kfClear')) $('kfClear').onclick = () => { KF = ''; render(); };
   if (TAB === 'cars') {
     $('q').oninput = e => { Q = e.target.value; const pos = e.target.selectionStart; render(); $('q').focus(); $('q').setSelectionRange(pos, pos); };
     $('addCar').onclick = () => openCar(null);
@@ -236,8 +242,8 @@ function render() {
 
 function carsView() {
   const q = Q.trim();
-  const list = D.cars.filter(c => !q || (c.name + c.plate + c.id + c.user).indexOf(q) >= 0);
-  let h = '<section class="card"><div class="head"><h2>車の一覧</h2><span class="sp"></span><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
+  const list = D.cars.filter(c => (!q || (c.name + c.plate + c.id + c.user).indexOf(q) >= 0) && kfMatch(c));
+  let h = '<section class="card"><div class="head"><h2>車の一覧</h2>' + (KF ? '<button class="btn b-soft" id="kfClear" style="margin-left:8px">「' + KFL[KF] + '」だけ表示中　× 全部に戻す</button>' : '') + '<span class="sp"></span><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
   if (!list.length) return h + '<div class="empty">見つかりません</div></section>';
   h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th>車検まで</th><th class="hide-s">点検・保険</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
   list.forEach(c => {
