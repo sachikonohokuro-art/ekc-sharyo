@@ -135,10 +135,13 @@ label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-botto
   <a class="tbtn" href="qr.html" target="_blank" rel="noopener">QRを印刷</a>
   <a class="tbtn" id="sheetBtn" href="#" target="_blank" rel="noopener" style="display:none">記録の表を開く</a>
   <button class="tbtn" id="lineQr">LINE友だち追加</button>
+  <button class="tbtn" id="manBtn">説明書を印刷</button>
   <button class="tbtn" id="logout" style="display:none">ログアウト</button>
 </div></header>
 
 <div id="lq" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:60;align-items:center;justify-content:center"><div style="background:#fff;border-radius:16px;padding:24px 28px;text-align:center;max-width:340px;width:90%"><h4 style="margin:0 0 6px;font-size:17px">LINE「車両管理」を友だち追加</h4><p style="margin:0 0 14px;font-size:13px;color:#64748b;line-height:1.6">スマホのカメラかLINEのQRリーダーで読んでください。車の知らせ（車検・オイル・キズなど）が届きます。</p><div id="lqBox" style="display:flex;justify-content:center;align-items:center;min-height:220px">読み込み中…</div><p style="margin:12px 0 0;font-size:13px">ID：@719oxmel</p><div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button class="btn b-soft" id="lqPrint">印刷する</button><button class="btn b-pri" id="lqClose">閉じる</button></div></div></div>
+
+<div id="man" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:60;align-items:center;justify-content:center"><div style="background:#fff;color:#0f1c33;border-radius:16px;padding:22px 24px;max-width:460px;width:92%"><h4 style="margin:0 0 4px;font-size:18px">説明書を印刷</h4><p style="margin:0 0 14px;font-size:13px;color:#64748b;line-height:1.6">押すとPDFが開きます。右上のプリンターのボタンか、ダウンロードしてから印刷してください。新しく使う人に渡してください。</p><div id="manList" style="display:grid;gap:10px"></div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn b-pri" id="manClose">閉じる</button></div></div></div>
 
 <main class="wrap" id="app"><div class="loading">読み込み中…</div></main>
 
@@ -506,6 +509,19 @@ $('lqPrint').onclick = () => {
   w.document.write('<html><head><meta charset="utf-8"><title>LINE 車両管理 友だち追加</title></head><body style="text-align:center;font-family:sans-serif;padding-top:60px"><h2>e-KC group　LINE「車両管理」友だち追加</h2><img src="' + src + '" style="width:320px;height:320px"><p style="font-size:18px">ID：@719oxmel</p><p>スマホのカメラかLINEのQRリーダーで読んでください。<br>車の知らせ（車検・オイル・キズなど）が届きます。</p></body></html>');
   w.document.close(); setTimeout(() => w.print(), 500);
 };
+
+/* ---------- 説明書を印刷 ---------- */
+const MANUALS = [
+  ['車のQRの使い方', 'ドライバー向け。乗る時・帰ってきた時・修理や車検に出す時（A4・3枚）', '1uy0VT8dgDN0Ab3X1JOmSHo2Lr1yBctWt'],
+  ['LINE「車両管理」の使い方', 'LINEの知らせを受け取る人向け。友だち追加QR・届く知らせ・聞ける言葉（A4・4枚）', '1CfWPdLScx0JXoaAlY8f4mUju_Ikg2q_U'],
+  ['管理ページの使い方', '管理する人向け。この管理ページの見方と、よくある作業（A4・3枚）', '1ky7zFSgwqBsJPox2qqAQ0VZm8c7mu0_k'],
+];
+$('manBtn').onclick = () => {
+  $('manList').innerHTML = MANUALS.map(m => '<a href="https://drive.google.com/file/d/' + m[2] + '/view" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border:1px solid #dde4ef;border-radius:12px;padding:12px 14px"><b style="font-size:15px;color:#2563eb">' + esc(m[0]) + ' ›</b><div style="font-size:12.5px;color:#64748b;margin-top:2px">' + esc(m[1]) + '</div></a>').join('');
+  $('man').style.display = 'flex';
+};
+$('manClose').onclick = () => { $('man').style.display = 'none'; };
+$('man').onclick = e => { if (e.target === $('man')) $('man').style.display = 'none'; };
 
 load();
 }
