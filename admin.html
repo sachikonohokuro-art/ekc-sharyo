@@ -133,6 +133,7 @@ label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-botto
 .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}.cb{flex:1;width:100%;display:flex;gap:1px;align-items:flex-end}.cb i{flex:1;border-radius:3px 3px 0 0}.col small{font-size:10px;color:#64748b}
 .lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:-1px}
 .stscroll{overflow-x:auto}.st-t td,.st-t th{white-space:nowrap}.st-t tr.dim td{color:#94a3b8}.warnc{color:#d97706;font-weight:700}
+.wd{font-size:13px;color:#2563eb;font-weight:700;margin-top:4px}.wd:empty{display:none}
 </style>
 </head>
 <body>
@@ -309,7 +310,7 @@ function openCar(id) {
   if (id) h += '<div class="box"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><h4 style="margin:0">整備・手続きの記録</h4><span style="flex:1"></span><button class="btn b-soft" id="mAddCar">＋ 予定・記録を足す</button></div><div id="mCar" class="loading" style="padding:12px">読み込み中…</div></div>';
   if (id) h += '<div class="box"><h4>これまでの記録</h4><div id="logs" class="loading" style="padding:20px">読み込み中…</div></div>';
   h += '<button class="btn b-soft" id="dback2" style="width:100%;justify-content:center;padding:12px">← 一覧に戻る</button></div>';
-  $('drawer').innerHTML = h;
+  $('drawer').innerHTML = h; wdFill($('drawer'));
   if (!document.getElementById('dw').classList.contains('open')) { document.getElementById('dw').classList.add('open'); history.pushState({ dw: 1 }, ''); }
   $('dx').onclick = $('dback').onclick = $('dback2').onclick = closeDrawer;
   $('save').onclick = () => {
@@ -465,7 +466,7 @@ function openMnt(mid, pre) {
       '<div style="grid-column:1/-1"><label for="gMemo">メモ</label><textarea class="f" id="gMemo" rows="2">' + esc(o.memo) + '</textarea></div>' +
       '</div><div class="acts"><button class="btn b-pri" id="gSave">保存する</button>' + (mid ? '<span style="flex:1"></span><button class="btn b-ng" id="gDel">この記録を消す</button>' : '') + '</div></div>';
     h += '<div class="box hint" style="line-height:1.7">知らせ（朝のLINE）：予定は入庫の7・3日前、前日、当日。入庫中は戻りの前日と当日、過ぎたら毎朝。記入待ちは毎週月曜。</div></div>';
-    $('drawer').innerHTML = h;
+    $('drawer').innerHTML = h; wdFill($('drawer'));
     if (!document.getElementById('dw').classList.contains('open')) { document.getElementById('dw').classList.add('open'); history.pushState({ dw: 1 }, ''); }
     $('dx').onclick = $('dback').onclick = closeDrawer;
     $('gType').onchange = () => { $('gNextL').textContent = nextLabel($('gType').value); };
@@ -542,6 +543,18 @@ function bindStats() {
     api('adminMakeReport', [ST.ym]).then(r => { $('stRepOut').innerHTML = 'できました：<a href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(r.name) + ' を開く ›</a>（ドライブの「月のレポート」フォルダにも入っています）'; $('stRep').disabled = false; })
       .catch(e => { $('stRepOut').textContent = e.message; $('stRep').disabled = false; });
   };
+}
+
+/* ---------- 日付の下に曜日を出す（WindowsのChrome・Edgeは日付欄の曜日が空になるため） ---------- */
+const WD = ['日', '月', '火', '水', '木', '金', '土'];
+function wdText(v) { if (!/^\d{4}-\d{2}-\d{2}$/.test(v || '')) return ''; const d = new Date(v + 'T00:00:00'); return v.slice(0, 4) + '年' + Number(v.slice(5, 7)) + '月' + Number(v.slice(8, 10)) + '日（' + WD[d.getDay()] + '曜日）'; }
+function wdFill(root) {
+  root.querySelectorAll('input[type=date]').forEach(i => {
+    let s = i.nextElementSibling;
+    if (!s || !s.classList.contains('wd')) { s = document.createElement('div'); s.className = 'wd'; i.after(s); }
+    const up = () => { s.textContent = wdText(i.value); };
+    up(); i.addEventListener('input', up); i.addEventListener('change', up);
+  });
 }
 
 /* ---------- LINE友だち追加のQR ---------- */
