@@ -149,10 +149,10 @@ const API = 'https://script.google.com/macros/s/AKfycbx_LoK0R7JQwjlY-69BImwaYu-S
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const km = n => Number(n || 0).toLocaleString('ja-JP');
-let KEY = '', D = null, TAB = 'cars', Q = '', photoCache = {}, M = null, MF = { car: '', type: '', year: '' }, KF = '';
+let KEY = '', D = null, TAB = 'cars', Q = '', photoCache = {}, M = null, MF = { car: '', type: '', year: '' }, KF = '', AF = '';
 const KFL = { free: '空き', use: '使用中', fix: '修理・車検など', warn: '気をつける車' };
 function isWarn(c) { return oilInfo(c).alert || shakenInfo(c).alert || (dueInfo(c.tenkenDays, 30) || {}).alert || (dueInfo(c.hokenDays, 30) || {}).alert || (c.status === '使用中' && c.sinceDay && c.sinceDay < D.today); }
-function kfMatch(c) { return !KF || (KF === 'free' ? c.status === '空き' : KF === 'use' ? c.status === '使用中' : KF === 'fix' ? isFix(c.status) : isWarn(c)); }
+function kfMatch(c) { return !KF || (KF === 'free' ? c.status === '空き' && c.qr !== false : KF === 'use' ? c.status === '使用中' : KF === 'fix' ? isFix(c.status) : isWarn(c)); }
 try { KEY = localStorage.getItem('ekcAdminKey') || ''; } catch (e) {}
 
 function api(fn, args) {
@@ -214,7 +214,7 @@ function stPill(s) { return '<span class="st ' + (s === '空き' ? 's-free' : s 
 
 function render() {
   const cars = D.cars;
-  const n = { free: cars.filter(c => c.status === '空き').length, use: cars.filter(c => c.status === '使用中').length, fix: cars.filter(c => isFix(c.status)).length,
+  const n = { free: cars.filter(c => c.status === '空き' && c.qr !== false).length, use: cars.filter(c => c.status === '使用中').length, fix: cars.filter(c => isFix(c.status)).length,
     warn: cars.filter(isWarn).length };
   let h = '<div class="sum">' +
     '<div class="kpi' + (KF === 'free' ? ' on' : '') + '" data-k="free" title="クリックで、この車だけ表示"><i style="background:var(--ok)"></i><div><small>空き</small><b class="num">' + n.free + '</b></div></div>' +
@@ -233,6 +233,7 @@ function render() {
   if (TAB === 'cars') {
     $('q').oninput = e => { Q = e.target.value; const pos = e.target.selectionStart; render(); $('q').focus(); $('q').setSelectionRange(pos, pos); };
     $('addCar').onclick = () => openCar(null);
+    $('af').onchange = e => { AF = e.target.value; render(); };
     document.querySelectorAll('tr.row').forEach(r => r.onclick = () => openCar(r.dataset.id));
   }
   if (TAB === 'dmg') bindDmg();
@@ -242,13 +243,14 @@ function render() {
 
 function carsView() {
   const q = Q.trim();
-  const list = D.cars.filter(c => (!q || (c.name + c.plate + c.id + c.user).indexOf(q) >= 0) && kfMatch(c));
-  let h = '<section class="card"><div class="head"><h2>車の一覧</h2>' + (KF ? '<button class="btn b-soft" id="kfClear" style="margin-left:8px">「' + KFL[KF] + '」だけ表示中　× 全部に戻す</button>' : '') + '<span class="sp"></span><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
+  const list = D.cars.filter(c => (!q || (c.name + c.plate + c.id + c.user + ((c.info || {}).area || '')).indexOf(q) >= 0) && kfMatch(c) && (!AF || (c.info || {}).area === AF));
+  const areas = Array.from(new Set(D.cars.map(c => (c.info || {}).area).filter(v => v)));
+  let h = '<section class="card"><div class="head"><h2>車の一覧</h2>' + (KF ? '<button class="btn b-soft" id="kfClear" style="margin-left:8px">「' + KFL[KF] + '」だけ表示中　× 全部に戻す</button>' : '') + '<span class="sp"></span><select class="f" id="af" style="width:auto;margin-right:8px"><option value="">所属：すべて（' + D.cars.length + '台）</option>' + areas.map(a => '<option' + (AF === a ? ' selected' : '') + '>' + esc(a) + '</option>').join('') + '</select><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
   if (!list.length) return h + '<div class="empty">見つかりません</div></section>';
   h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th>車検まで</th><th class="hide-s">点検・保険</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
   list.forEach(c => {
     const o = oilInfo(c), late = c.status === '使用中' && c.sinceDay && c.sinceDay < D.today;
-    h += '<tr class="row" data-id="' + esc(c.id) + '"><td class="car"><b>' + esc(c.name) + '</b><small class="num">' + esc(c.id) + '</small></td>' +
+    h += '<tr class="row" data-id="' + esc(c.id) + '"><td class="car"><b>' + esc(c.name) + '</b><small class="num">' + esc(c.id) + ((c.info || {}).area ? '　' + esc(c.info.area) : '') + (c.qr === false ? '　台帳のみ' : '') + '</small></td>' +
       '<td><span class="plate">' + esc(c.plate) + '</span></td><td>' + stPill(c.status) + (planTxt(c) ? '<div class="hint" style="max-width:240px;white-space:normal">' + esc(planTxt(c)) + '</div>' : '') + '</td>' +
       '<td class="who hide-s">' + (c.status === '使用中' ? '<b>' + esc(c.user) + '</b><small>' + esc(c.since) + ' 出発</small>' + (late ? '<div class="alert">降りる入力なし</div>' : '') : '<small>—</small>') + '</td>' +
       '<td class="r num hide-s">' + (c.last ? km(c.last) : '—') + '</td><td><span class="oil num ' + o.cls + '">' + o.t + '</span></td>' +
@@ -279,6 +281,11 @@ function openCar(id) {
   if (id) h += '<div><label for="fTenken">12か月点検の期限</label><input class="f num" id="fTenken" type="date" value="' + esc(c.tenken || '') + '"><div class="hint">30・14・7日前と前日、過ぎたら毎朝LINEで知らせます</div></div>' +
     '<div><label for="fHoken">保険の満期日</label><input class="f num" id="fHoken" type="date" value="' + esc(c.hoken || '') + '"><div class="hint">60・30・14・7日前と前日に知らせます</div></div>' +
     '<div style="grid-column:1/-1"><label for="fNote">備考（使えない期間や、予定の細かいことなど）</label><textarea class="f" id="fNote" rows="2" style="resize:vertical;min-height:60px" placeholder="例）11/20〜22は社長の出張で使用予定">' + esc(c.note || '') + '</textarea><div class="hint">修理・車検から「空き」に戻すと消えます</div></div>';
+  { const f = c.info || {}, fl = [['area', '所属', '例）本社'], ['company', '会社', ''], ['model', '車種', '例）NV200バネット'], ['maker', 'メーカー', ''], ['color', '色', ''], ['tanto', '担当者', ''], ['lease', 'リース会社', '会社の持ち物なら空'], ['leaseEnd', 'リース満了日', '例）2028-05-19'], ['mente', 'メンテナンスリース', 'あり／なし'], ['gas', 'ガソリンカード', '例）R0004'], ['etc', 'ETCカード', ''], ['policy', '証券番号', '']];
+    h += '<div style="grid-column:1/-1;margin-top:6px;padding-top:12px;border-top:1px dashed #d0d5dd"><b>台帳（会社の車両一覧）</b></div>' +
+      '<div><label for="iqr">QRで乗る・降りるを記録</label><select class="f" id="iqr"><option value="する"' + (f.qr !== 'なし' ? ' selected' : '') + '>する（本社の運用車）</option><option value="なし"' + (f.qr === 'なし' ? ' selected' : '') + '>しない（台帳と期限の管理だけ）</option></select><div class="hint">しない車は、空き・タイヤの知らせ・QR印刷に出ません。車検・点検・保険の知らせは届きます</div></div>' +
+      fl.map(([k, l, ph]) => '<div><label for="i_' + k + '">' + l + '</label><input class="f" id="i_' + k + '" value="' + esc(f[k] || '') + '" placeholder="' + esc(ph) + '"></div>').join('') +
+      '<div style="grid-column:1/-1"><label for="i_memo2">台帳メモ</label><textarea class="f" id="i_memo2" rows="2" style="resize:vertical;min-height:60px">' + esc(f.memo2 || '') + '</textarea><div class="hint">リースの契約・税金・連絡先など。修理から戻っても消えません</div></div>'; }
   h += '</div><div class="acts"><button class="btn b-pri" id="save">' + (id ? '保存する' : '車を足す') + '</button>' + (id ? '<span style="flex:1"></span><button class="btn b-ng" id="del">この車を消す</button>' : '') + '</div></div>';
   if (id) h += '<div class="box"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><h4 style="margin:0">整備・手続きの記録</h4><span style="flex:1"></span><button class="btn b-soft" id="mAddCar">＋ 予定・記録を足す</button></div><div id="mCar" class="loading" style="padding:12px">読み込み中…</div></div>';
   if (id) h += '<div class="box"><h4>これまでの記録</h4><div id="logs" class="loading" style="padding:20px">読み込み中…</div></div>';
@@ -287,7 +294,7 @@ function openCar(id) {
   if (!document.getElementById('dw').classList.contains('open')) { document.getElementById('dw').classList.add('open'); history.pushState({ dw: 1 }, ''); }
   $('dx').onclick = $('dback').onclick = $('dback2').onclick = closeDrawer;
   $('save').onclick = () => {
-    const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '', shaken: $('fShaken').value, note: id ? $('fNote').value : undefined, tenken: id ? $('fTenken').value : undefined, hoken: id ? $('fHoken').value : undefined };
+    const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '', shaken: $('fShaken').value, note: id ? $('fNote').value : undefined, tenken: id ? $('fTenken').value : undefined, hoken: id ? $('fHoken').value : undefined, info: (() => { const o = { qr: $('iqr').value }; ['area', 'company', 'model', 'maker', 'color', 'tanto', 'lease', 'leaseEnd', 'mente', 'gas', 'etc', 'policy', 'memo2'].forEach(k => o[k] = $('i_' + k).value); return o; })() };
     if (!p.name.trim()) { toast('車の名前を入れてください'); return; }
     if (id && p.status === '使用中') p.status = '';
     $('save').disabled = true;
