@@ -404,7 +404,7 @@ function mntView() {
     up.forEach(x => {
       const days = Math.round((new Date(x.date + 'T00:00:00') - new Date(D.today + 'T00:00:00')) / 86400000);
       const left = '<span class="left ' + (days < 0 ? 'ng' : days <= 14 ? 'warn' : '') + '">' + (days < 0 ? (-days) + '日過ぎ' : days === 0 ? '今日' : 'あと' + days + '日') + '</span>';
-      if (x.kind === 'due') h += '<tr><td class="d num">' + ymd(x.date) + '</td><td>' + left + '</td><td><b>' + esc(x.car) + '</b></td><td>' + esc(x.type) + '</td><td class="hide-s hint">期限。まだ予定が入っていません</td><td><span class="mst d">期限</span></td><td class="r"><button class="btn b-soft" data-plan="' + esc(x.carId) + '|' + esc(x.type) + '">予定を入れる</button></td></tr>';
+      if (x.kind === 'due') h += '<tr><td class="d num">' + ymd(x.date) + '</td><td>' + left + '</td><td><b>' + esc(x.car) + '</b></td><td>' + esc(x.type) + '</td><td class="hide-s hint">期限。まだ予定が入っていません</td><td><span class="mst d">期限</span></td><td class="r">' + (M.types.indexOf(x.type) >= 0 ? '<button class="btn b-soft" data-plan="' + esc(x.carId) + '|' + esc(x.type) + '">予定を入れる</button>' : '<button class="btn b-soft" data-car="' + esc(x.carId) + '">車の画面で直す</button>') + '</td></tr>';
       else { const o = x.rec; h += '<tr><td class="d num">' + ymd(x.date) + (o.state === '入庫中' ? '<div class="hint">戻り予定</div>' : o.state === '記入待ち' ? '<div class="hint">戻った日</div>' : '') + '</td><td>' + (o.state === '記入待ち' ? '' : left) + '</td><td><b>' + esc(o.car) + '</b></td><td>' + esc(o.type) + '</td><td class="hide-s">' + esc([o.shop, o.detail].filter(v => v).join('　')) + (o.state === '記入待ち' ? '<div class="alert">費用などを入れて「完了」に</div>' : '') + '</td><td>' + mstPill(o.state) + '</td><td class="r"><button class="btn b-soft" data-mid="' + esc(o.id) + '">直す</button></td></tr>'; }
     });
     h += '</tbody></table>';
@@ -426,6 +426,7 @@ function bindMnt() {
   if (!M) { loadMnt().then(render).catch(e => toast(e.message)); return; }
   $('mAdd').onclick = () => openMnt(null, {});
   document.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => openMnt(b.dataset.mid));
+  document.querySelectorAll('[data-car]').forEach(b => b.onclick = () => openCar(b.dataset.car));
   document.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => { const p = b.dataset.plan.split('|'); openMnt(null, { carId: p[0], type: p[1] }); });
   [['mfCar', 'car'], ['mfType', 'type'], ['mfYear', 'year']].forEach(([i, k]) => $(i).onchange = e => { MF[k] = e.target.value; render(); });
 }
