@@ -123,6 +123,16 @@ label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-botto
 .loading{padding:60px;text-align:center;color:var(--sub)}
 @media(max-width:860px){.sum{grid-template-columns:repeat(2,minmax(0,1fr))}.hide-s{display:none}.dmg{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:560px){.search{width:100%}td,th{padding:10px 8px}}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding:0 18px 18px}
+.sk{background:#f3f6fb;border-radius:12px;padding:10px 14px}.sk small{display:block;color:#64748b;font-size:12px}.sk b{font-size:20px}
+.s2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.hbs{padding:0 18px 18px;display:grid;gap:6px}
+.hb{display:grid;grid-template-columns:130px minmax(0,1fr) 84px;gap:8px;align-items:center;font-size:13px}
+.hb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hb-t{background:#eef2f8;border-radius:6px;height:14px;overflow:hidden}.hb-t i{display:block;height:100%;border-radius:6px}.hb-v{text-align:right;white-space:nowrap}
+.cols{display:flex;gap:3px;align-items:flex-end;padding:0 18px 18px;height:190px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}.cb{flex:1;width:100%;display:flex;gap:1px;align-items:flex-end}.cb i{flex:1;border-radius:3px 3px 0 0}.col small{font-size:10px;color:#64748b}
+.lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:-1px}
+.stscroll{overflow-x:auto}.st-t td,.st-t th{white-space:nowrap}.st-t tr.dim td{color:#94a3b8}.warnc{color:#d97706;font-weight:700}
 </style>
 </head>
 <body>
@@ -231,8 +241,9 @@ function render() {
   h += '<div class="tabs"><button class="tab' + (TAB === 'cars' ? ' on' : '') + '" data-t="cars">車の一覧</button>' +
     '<button class="tab' + (TAB === 'dmg' ? ' on' : '') + '" data-t="dmg">キズの報告' + (D.dmg.length ? '<em>' + D.dmg.length + '</em>' : '') + '</button>' +
     '<button class="tab' + (TAB === 'mnt' ? ' on' : '') + '" data-t="mnt">整備・手続き</button>' +
+    '<button class="tab' + (TAB === 'stats' ? ' on' : '') + '" data-t="stats">集計</button>' +
     '<button class="tab' + (TAB === 'people' ? ' on' : '') + '" data-t="people">ドライバー</button></div>';
-  h += TAB === 'cars' ? carsView() : TAB === 'dmg' ? dmgView() : TAB === 'mnt' ? mntView() : peopleView();
+  h += TAB === 'cars' ? carsView() : TAB === 'dmg' ? dmgView() : TAB === 'mnt' ? mntView() : TAB === 'stats' ? statsView() : peopleView();
   $('app').innerHTML = h;
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => { TAB = b.dataset.t; render(); });
   document.querySelectorAll('.kpi[data-k]').forEach(b => b.onclick = () => { KF = KF === b.dataset.k ? '' : b.dataset.k; TAB = 'cars'; render(); });
@@ -246,6 +257,7 @@ function render() {
   if (TAB === 'dmg') bindDmg();
   if (TAB === 'people') bindPeople();
   if (TAB === 'mnt') bindMnt();
+  if (TAB === 'stats') bindStats();
 }
 
 function carsView() {
@@ -488,6 +500,48 @@ function bindPeople() {
       api('adminDeleteName', [n]).then(() => { D.people = D.people.filter(x => x !== n); toast('消しました'); render(); }).catch(e => toast(e.message));
     });
   });
+}
+
+/* ---------- 集計（車ごと・月ごと。人ごとの集計はしない） ---------- */
+let ST = null, STM = '';
+function loadStats(ym) { return api('adminStats', [ym || '']).then(d => { ST = d; STM = d.ym; return d; }); }
+function hbar(list, key, unit, color) {
+  const mx = Math.max.apply(null, list.map(c => c[key]).concat([1]));
+  return list.map(c => '<div class="hb"><span class="hb-l">' + esc(c.name) + '</span><span class="hb-t"><i style="width:' + (c[key] / mx * 100).toFixed(1) + '%;background:' + color + '"></i></span><span class="hb-v num">' + km(c[key]) + unit + '</span></div>').join('');
+}
+function statsView() {
+  if (!ST) return '<section class="card"><div class="empty">集計しています…</div></section>';
+  const cs = ST.cars, used = cs.filter(c => c.trips || c.dist), idle = cs.filter(c => c.qr && !c.trips && !c.dist);
+  const sum = k => cs.reduce((a, c) => a + (Number(c[k]) || 0), 0);
+  const act = ST.days.filter(d => d.used), pk = ST.days.reduce((a, d) => d.peak > a.peak ? d : a, { peak: 0, date: '' });
+  const ym = ST.ym, ml = s => s.slice(0, 4) + '年' + Number(s.slice(5, 7)) + '月';
+  let h = '<section class="card"><div class="head"><h2>集計（' + ml(ym) + '）</h2><span class="hint">記録は ' + ymd(ST.first) + ' から。人ごとの集計はしていません</span><span class="sp"></span>' +
+    '<select class="f" id="stM" style="width:auto">' + ST.months.map(m => '<option value="' + m + '"' + (m === ym ? ' selected' : '') + '>' + ml(m) + '</option>').join('') + '</select>' +
+    '<button class="btn b-pri" id="stRep">社長用レポート（PDF）を作る</button></div><div id="stRepOut" class="hint" style="padding:0 18px 10px"></div>';
+  h += '<div class="sgrid">' + [['走った距離（全車）', km(sum('dist')) + ' km'], ['使った時間（全車）', Math.round(sum('hours')) + ' 時間'], ['使われた回数', sum('trips') + ' 回'],
+    ['1日に動いた台数', act.length ? '平均 ' + (Math.round(act.reduce((a, d) => a + d.used, 0) / act.length * 10) / 10) + '・最大 ' + Math.max.apply(null, act.map(d => d.used)) + ' 台' : '—'],
+    ['同時に使われた最大', pk.peak ? pk.peak + ' 台（' + md(pk.date) + '）' : '—'], ['一度も使われなかった車', idle.length + ' 台']]
+    .map(x => '<div class="sk"><small>' + x[0] + '</small><b class="num">' + x[1] + '</b></div>').join('') + '</div>' +
+    (idle.length ? '<div class="hint" style="padding:0 18px 18px">使われなかった車：' + idle.map(c => esc(c.name)).join('、') + '</div>' : '') + '</section>';
+  const byD = used.slice().sort((a, b) => b.dist - a.dist), byH = used.slice().sort((a, b) => b.hours - a.hours);
+  h += '<div class="s2"><section class="card"><div class="head"><h2>車ごとの走った距離</h2></div><div class="hbs">' + (byD.length ? hbar(byD, 'dist', ' km', '#2563eb') : '<div class="empty">記録なし</div>') + '</div></section>' +
+    '<section class="card"><div class="head"><h2>車ごとの使った時間</h2></div><div class="hbs">' + (byH.length ? hbar(byH, 'hours', ' 時間', '#059669') : '<div class="empty">記録なし</div>') + '</div></section></div>';
+  const mxd = Math.max.apply(null, ST.days.map(d => d.used).concat([1]));
+  h += '<section class="card"><div class="head"><h2>毎日、何台の車が動いたか</h2><span class="hint"><i class="lg" style="background:#2563eb"></i>その日に動いた台数<i class="lg" style="background:#d97706"></i>同時に使われた最大</span></div><div class="cols">' +
+    ST.days.map(d => '<div class="col" title="' + md(d.date) + '：' + d.used + '台・同時に最大' + d.peak + '台"><div class="cb"><i style="height:' + (d.used / mxd * 100) + '%;background:#2563eb"></i><i style="height:' + (d.peak / mxd * 100) + '%;background:#d97706"></i></div><small>' + Number(d.date.slice(8, 10)) + '</small></div>').join('') + '</div></section>';
+  h += '<section class="card"><div class="head"><h2>車ごとの数字</h2><span class="hint">1年のペース＝この月の走り方が1年続いた時の距離。年式が分かれば寿命の目安も出せます</span></div><div class="stscroll"><table class="st-t"><thead><tr><th>車</th><th>所属</th><th class="r">使った日</th><th class="r">時間</th><th class="r">回数</th><th class="r">走った距離</th><th class="r">給油</th><th class="r">燃費</th><th class="r">入力忘れ</th><th class="r">キズ</th><th class="r">整備費</th><th class="r">リース料/月</th><th class="r">メーター</th><th class="r">1年のペース</th></tr></thead><tbody>' +
+    used.concat(cs.filter(c => used.indexOf(c) < 0)).map(c => '<tr' + (c.trips || c.dist ? '' : ' class="dim"') + '><td><b>' + esc(c.name) + '</b></td><td>' + esc(c.area) + '</td><td class="r num">' + c.days + '</td><td class="r num">' + c.hours + '</td><td class="r num">' + c.trips + '</td><td class="r num">' + km(c.dist) + ' km</td><td class="r num">' + (c.fuel ? c.fuel + ' L' : '—') + '</td><td class="r num">' + (c.eff ? c.eff + ' km/L' : '—') + '</td><td class="r num' + (c.forgot ? ' warnc' : '') + '">' + c.forgot + '</td><td class="r num' + (c.dmg ? ' warnc' : '') + '">' + c.dmg + '</td><td class="r num">' + (c.cost ? km(c.cost) + '円' : '—') + '</td><td class="r num">' + (c.lease ? km(c.lease) + '円' : '—') + '</td><td class="r num">' + (c.meter ? km(c.meter) : '—') + '</td><td class="r num">' + (c.pace ? km(c.pace) + ' km' : '—') + '</td></tr>').join('') +
+    '</tbody></table></div></section>';
+  return h;
+}
+function bindStats() {
+  if (!ST) { loadStats(STM).then(render).catch(e => toast(e.message)); return; }
+  $('stM').onchange = e => { ST = null; STM = e.target.value; render(); };
+  $('stRep').onclick = () => {
+    $('stRep').disabled = true; $('stRepOut').textContent = 'レポートを作っています（30秒〜1分ほど）…';
+    api('adminMakeReport', [ST.ym]).then(r => { $('stRepOut').innerHTML = 'できました：<a href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(r.name) + ' を開く ›</a>（ドライブの「月のレポート」フォルダにも入っています）'; $('stRep').disabled = false; })
+      .catch(e => { $('stRepOut').textContent = e.message; $('stRep').disabled = false; });
+  };
 }
 
 /* ---------- LINE友だち追加のQR ---------- */
