@@ -133,7 +133,7 @@ label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-botto
   <span class="upd" id="upd"></span>
   <button class="tbtn" id="reload" style="display:none">↻ 最新にする</button>
   <a class="tbtn" href="qr.html" target="_blank" rel="noopener">QRを印刷</a>
-  <a class="tbtn" href="https://docs.google.com/spreadsheets/d/1W5jfShfsyprNcxKdCHzQVwaXwzAsnm8mxXzuFr7cCWk/edit" target="_blank" rel="noopener">記録の表を開く</a>
+  <a class="tbtn" id="sheetBtn" href="#" target="_blank" rel="noopener" style="display:none">記録の表を開く</a>
   <button class="tbtn" id="lineQr">LINE友だち追加</button>
   <button class="tbtn" id="logout" style="display:none">ログアウト</button>
 </div></header>
@@ -173,7 +173,7 @@ $('big').onclick = () => $('big').classList.remove('on');
 
 /* ---------- ログイン ---------- */
 function login(msg) {
-  $('reload').style.display = $('logout').style.display = 'none'; $('upd').textContent = '';
+  $('reload').style.display = $('logout').style.display = $('sheetBtn').style.display = 'none'; $('upd').textContent = '';
   $('app').innerHTML = '<div class="login"><h2>管理ページ</h2><p>合言葉を入れてください。このパソコンでは次から入れんで済みます。</p>' +
     '<input class="f" id="key" type="password" autocomplete="current-password" placeholder="合言葉"><div class="err" id="lerr"></div>' +
     '<div class="acts"><button class="btn b-pri" id="go" style="width:100%;justify-content:center;padding:12px">入る</button></div></div>';
@@ -189,7 +189,7 @@ $('reload').onclick = () => load();
 /* ---------- 読み込み ---------- */
 function load() {
   if (!KEY) { login(); return; }
-  return api('adminData').then(d => { D = d; $('reload').style.display = $('logout').style.display = ''; $('upd').textContent = d.updated + ' 時点'; render(); })
+  return api('adminData').then(d => { D = d; $('reload').style.display = $('logout').style.display = ''; if (d.ssUrl) { $('sheetBtn').href = d.ssUrl; $('sheetBtn').style.display = ''; } $('upd').textContent = d.updated + ' 時点'; render(); })
     .catch(e => { if (/合言葉/.test(e.message)) { KEY = ''; login(e.message); } else $('app').innerHTML = '<div class="login"><h2>読み込めませんでした</h2><p>' + esc(e.message) + '</p><button class="btn b-pri" onclick="location.reload()">もう一度</button></div>'; });
 }
 const isFix = s => s !== '空き' && s !== '使用中';
