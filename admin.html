@@ -122,7 +122,19 @@ label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-botto
 .err{background:var(--ng-l);color:var(--ng);border-radius:10px;padding:10px 12px;margin-top:12px;font-weight:700;display:none}
 .loading{padding:60px;text-align:center;color:var(--sub)}
 @media(max-width:860px){.sum{grid-template-columns:repeat(2,minmax(0,1fr))}.hide-s{display:none}.dmg{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:560px){.search{width:100%}td,th{padding:10px 8px}}
+@media(max-width:560px){.search{width:100%}td,th{padding:10px 8px}
+table.ct thead{display:none}
+table.ct .hide-s{display:none!important}
+table.ct,table.ct tbody,table.ct tr,table.ct td{display:block;width:100%}
+table.ct tr.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+table.ct td{padding:0;border:0;min-width:0}
+table.ct td.car{grid-column:1/-1}
+table.ct td:nth-child(2){grid-column:1}
+table.ct td:nth-child(3){grid-column:2;justify-self:end}
+table.ct td:nth-child(6){grid-column:1}
+table.ct td:nth-child(7){grid-column:2;justify-self:end;text-align:right}
+table.ct td:nth-child(11){grid-column:1/-1;justify-self:start}
+}
 .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding:0 18px 18px}
 .sk{background:#f3f6fb;border-radius:12px;padding:10px 14px}.sk small{display:block;color:#64748b;font-size:12px}.sk b{font-size:20px}
 .s2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
@@ -267,7 +279,7 @@ function carsView() {
   const areas = Array.from(new Set(D.cars.map(c => (c.info || {}).area).filter(v => v)));
   let h = '<section class="card"><div class="head"><h2>車の一覧</h2>' + (KF ? '<button class="btn b-soft" id="kfClear" style="margin-left:8px">「' + KFL[KF] + '」だけ表示中　× 全部に戻す</button>' : '') + '<span class="sp"></span><select class="f" id="af" style="width:auto;margin-right:8px"><option value="">所属：すべて（' + D.cars.length + '台）</option>' + areas.map(a => '<option' + (AF === a ? ' selected' : '') + '>' + esc(a) + '</option>').join('') + '</select><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
   if (!list.length) return h + '<div class="empty">見つかりません</div></section>';
-  h += '<table><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th>車検まで</th><th class="hide-s">点検・保険</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
+  h += '<table class="ct"><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th>車検まで</th><th class="hide-s">点検・保険</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
   list.forEach(c => {
     const o = oilInfo(c), late = c.status === '使用中' && c.sinceDay && c.sinceDay < D.today;
     h += '<tr class="row" data-id="' + esc(c.id) + '"><td class="car"><b>' + esc(c.name) + '</b><small class="num">' + esc(c.id) + ((c.info || {}).area ? '　' + esc(c.info.area) : '') + (c.qr === false ? '　台帳のみ' : '') + '</small></td>' +
