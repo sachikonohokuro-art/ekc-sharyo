@@ -159,6 +159,19 @@ table.ct{display:none}
 .lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:-1px}
 .stscroll{overflow-x:auto}.st-t td,.st-t th{white-space:nowrap}.st-t tr.dim td{color:#94a3b8}.warnc{color:#d97706;font-weight:700}
 .wd{font-size:13px;color:#2563eb;font-weight:700;margin-top:4px}.wd:empty{display:none}
+
+/* ---- スマホ：表を「項目名つきの札」にする（集計の表は横にスクロール） ---- */
+@media(max-width:560px){
+ table:not(.st-t):not(.ct) thead{display:none}
+ table:not(.st-t):not(.ct),table:not(.st-t):not(.ct) tbody{display:block;width:100%}
+ table:not(.st-t):not(.ct) tr{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+ table:not(.st-t):not(.ct) td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border:0;text-align:right;min-width:0}
+ table:not(.st-t):not(.ct) td::before{content:attr(data-l);font-size:11.5px;font-weight:700;color:var(--sub);letter-spacing:.03em;text-align:left;flex:none}
+ table:not(.st-t):not(.ct) td[data-l=""]{justify-content:flex-end}
+ table:not(.st-t):not(.ct) td[data-l=""]::before{display:none}
+ table:not(.st-t):not(.ct) td:empty{display:none}
+ table:not(.st-t):not(.ct) .hide-s{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -271,6 +284,7 @@ function render() {
     '<button class="tab' + (TAB === 'people' ? ' on' : '') + '" data-t="people">ドライバー</button></div>';
   h += TAB === 'cars' ? carsView() : TAB === 'dmg' ? dmgView() : TAB === 'mnt' ? mntView() : TAB === 'stats' ? statsView() : peopleView();
   $('app').innerHTML = h;
+  document.querySelectorAll('table').forEach(tb => { const hs = [...tb.querySelectorAll('thead th')].map(x => x.textContent.trim()); tb.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { td.dataset.l = hs[i] || ''; })); });
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => { TAB = b.dataset.t; render(); });
   document.querySelectorAll('.kpi[data-k]').forEach(b => b.onclick = () => { KF = KF === b.dataset.k ? '' : b.dataset.k; TAB = 'cars'; render(); });
   if ($('kfClear')) $('kfClear').onclick = () => { KF = ''; render(); };
