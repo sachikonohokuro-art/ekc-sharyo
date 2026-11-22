@@ -162,15 +162,26 @@ table.ct{display:none}
 
 /* ---- スマホ：表を「項目名つきの札」にする（集計の表は横にスクロール） ---- */
 @media(max-width:560px){
- table:not(.st-t):not(.ct) thead{display:none}
- table:not(.st-t):not(.ct),table:not(.st-t):not(.ct) tbody{display:block;width:100%}
- table:not(.st-t):not(.ct) tr{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
- table:not(.st-t):not(.ct) td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border:0;text-align:right;min-width:0}
- table:not(.st-t):not(.ct) td::before{content:attr(data-l);font-size:11.5px;font-weight:700;color:var(--sub);letter-spacing:.03em;text-align:left;flex:none}
- table:not(.st-t):not(.ct) td[data-l=""]{justify-content:flex-end}
- table:not(.st-t):not(.ct) td[data-l=""]::before{display:none}
- table:not(.st-t):not(.ct) td:empty{display:none}
- table:not(.st-t):not(.ct) .hide-s{display:none!important}
+ table:not(.ct) thead{display:none}
+ table:not(.ct),table:not(.ct) tbody{display:block;width:100%}
+ table:not(.ct) tr{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+ table:not(.ct) td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border:0;text-align:right;min-width:0;white-space:normal}
+ table:not(.ct) td::before{content:attr(data-l);font-size:11.5px;font-weight:700;color:var(--sub);letter-spacing:.03em;text-align:left;flex:none}
+ table:not(.ct) td[data-l=""]{justify-content:flex-end}
+ table:not(.ct) td[data-l=""]::before{display:none}
+ table:not(.ct) td:empty{display:none}
+ table:not(.ct) .hide-s{display:none!important}
+ /* 車ごとの数字：スマホに出す項目だけ残す（1車名・2所属・4時間・5回数・6走った距離・8燃費・14の1年のペース） */
+ table.st-t td:nth-child(3),table.st-t td:nth-child(7),table.st-t td:nth-child(9),table.st-t td:nth-child(10),table.st-t td:nth-child(11),table.st-t td:nth-child(12),table.st-t td:nth-child(13){display:none!important}
+ table.st-t tr{padding:14px 16px}
+ table.st-t td:nth-child(1){display:block;text-align:left;font-size:17px;padding:0 0 6px}
+ table.st-t td:nth-child(1)::before{display:none}
+ table.st-t td:nth-child(2){font-size:13px;color:var(--sub);padding:0 0 8px;border-bottom:1px dashed var(--line);margin-bottom:6px}
+ table.st-t td:nth-child(2)::before{display:none}
+ table.st-t td:nth-child(2)::after{content:none}
+ table.st-t td:nth-child(4)::after{content:" 時間";font-size:12px;color:var(--sub);font-weight:500;margin-left:2px}
+ table.st-t td:nth-child(5)::after{content:" 回";font-size:12px;color:var(--sub);font-weight:500;margin-left:2px}
+ .col small.sx{visibility:hidden}
 }
 </style>
 </head>
@@ -585,7 +596,7 @@ function statsView() {
     '<section class="card"><div class="head"><h2>車ごとの使った時間</h2></div><div class="hbs">' + (byH.length ? hbar(byH, 'hours', ' 時間', '#059669') : '<div class="empty">記録なし</div>') + '</div></section></div>';
   const mxd = Math.max.apply(null, ST.days.map(d => d.used).concat([1]));
   h += '<section class="card"><div class="head"><h2>毎日、何台の車が動いたか</h2><span class="hint"><i class="lg" style="background:#2563eb"></i>その日に動いた台数<i class="lg" style="background:#d97706"></i>同時に使われた最大</span></div><div class="cols">' +
-    ST.days.map(d => '<div class="col" title="' + md(d.date) + '：' + d.used + '台・同時に最大' + d.peak + '台"><div class="cb"><i style="height:' + (d.used / mxd * 100) + '%;background:#2563eb"></i><i style="height:' + (d.peak / mxd * 100) + '%;background:#d97706"></i></div><small>' + Number(d.date.slice(8, 10)) + '</small></div>').join('') + '</div></section>';
+    ST.days.map(d => '<div class="col" title="' + md(d.date) + '：' + d.used + '台・同時に最大' + d.peak + '台"><div class="cb"><i style="height:' + (d.used / mxd * 100) + '%;background:#2563eb"></i><i style="height:' + (d.peak / mxd * 100) + '%;background:#d97706"></i></div><small class="' + (Number(d.date.slice(8, 10)) % 5 === 1 ? '' : 'sx') + '">' + Number(d.date.slice(8, 10)) + '</small></div>').join('') + '</div></section>';
   h += '<section class="card"><div class="head"><h2>車ごとの数字</h2><span class="hint">1年のペース＝この月の走り方が1年続いた時の距離。年式が分かれば寿命の目安も出せます</span></div><div class="stscroll"><table class="st-t"><thead><tr><th>車</th><th>所属</th><th class="r">使った日</th><th class="r">時間</th><th class="r">回数</th><th class="r">走った距離</th><th class="r">給油</th><th class="r">燃費</th><th class="r">入力忘れ</th><th class="r">キズ</th><th class="r">整備費</th><th class="r">リース料/月</th><th class="r">メーター</th><th class="r">1年のペース</th></tr></thead><tbody>' +
     used.concat(cs.filter(c => used.indexOf(c) < 0)).map(c => '<tr' + (c.trips || c.dist ? '' : ' class="dim"') + '><td><b>' + esc(c.name) + '</b></td><td>' + esc(c.area) + '</td><td class="r num">' + c.days + '</td><td class="r num">' + c.hours + '</td><td class="r num">' + c.trips + '</td><td class="r num">' + km(c.dist) + ' km</td><td class="r num">' + (c.fuel ? c.fuel + ' L' : '—') + '</td><td class="r num">' + (c.eff ? c.eff + ' km/L' : '—') + '</td><td class="r num' + (c.forgot ? ' warnc' : '') + '">' + c.forgot + '</td><td class="r num' + (c.dmg ? ' warnc' : '') + '">' + c.dmg + '</td><td class="r num">' + (c.cost ? km(c.cost) + '円' : '—') + '</td><td class="r num">' + (c.lease ? km(c.lease) + '円' : '—') + '</td><td class="r num">' + (c.meter ? km(c.meter) : '—') + '</td><td class="r num">' + (c.pace ? km(c.pace) + ' km' : '—') + '</td></tr>').join('') +
     '</tbody></table></div></section>';
