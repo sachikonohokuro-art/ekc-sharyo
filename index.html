@@ -224,6 +224,7 @@ function home() {
   h += '<div class="stat"><div class="k">オイル交換まで</div><div class="v num"' + (oilLeft !== null && oilLeft <= 500 ? ' style="color:var(--ng)"' : '') + '>' + (oilLeft === null ? '—' : km(oilLeft) + '<small>km</small>') + '</div>' + (oilLeft === null ? '' : '<div class="bar"><span style="width:' + oilPct + '%;' + (oilLeft <= 500 ? 'background:var(--ng)' : '') + '"></span></div>') + '</div>';
   h += '<div class="stat wide"><div><div class="k">本日の点検写真</div><div style="font-weight:700;margin-top:2px">' + (c.baseToday ? '撮影済み・' + esc(c.baseBy) + ' さん' : '未撮影') + '</div></div><span class="chip ' + (c.baseToday ? 'c-ok' : 'c-warn') + '" style="padding:5px 10px;font-size:12px">' + (c.baseToday ? 'OK' : '出発時に撮影') + '</span></div>';
   h += '</div></div><div class="stack">';
+  if (!c.tireDone) h += '<div class="note warn" style="margin:0 0 10px;font-weight:700">⚠ 今月まだ空気圧を見ていません。ガソリンを入れる時に、空気圧も一緒に見てください。</div>';
   h += '<button class="btn btn-soft" onclick="askName(\'fuel\')">' + IC.fuel + '給油を記録する</button>';
 
   if (c.status === '使用中') {
@@ -447,12 +448,18 @@ function fuelForm() {
 /* ---------- 給油だけを記録（運行中でもOK） ---------- */
 function fuelOnly() {
   S.fuel = true;
-  var h = '<div class="card">' + steps(2, 2) + '<div class="eyebrow">給油</div><h2>給油を記録</h2><p class="lead">入れた時にすぐ記録できます。乗っていなくてもOKです。</p>';
+  if (!D.car.tireDone && !S.fuelNoticed) {
+    view('<div class="card"><div class="eyebrow" style="color:var(--ng)">ガソリンを入れる前に</div><h2>空気圧も一緒に見てください</h2><p class="lead">今月まだ、この車のタイヤの空気圧を見ていません。</p>' +
+      '<div class="note err" style="display:block;font-weight:700;line-height:1.6;border:2px solid var(--ng)"><div style="font-size:19px;margin-bottom:6px">⚠ ガソリンを入れる時に、空気圧も見てください</div>スタンドで給油する時に、タイヤの空気圧を確かめてから給油してください。</div>' +
+      '<div class="stack"><button class="btn btn-primary" onclick="S.fuelNoticed=true;fuelOnly()">わかった</button><button class="btn btn-ghost" onclick="home()">やめる</button></div></div>');
+    return;
+  }
+  var h = '<div class="card">' + steps(2, 2) + '<div class="eyebrow">給油</div><h2>給油を記録</h2><p class="lead">入れ終わったら記録してください。乗っていなくてもOKです。</p>';
   h += '<div class="meterbox"><div class="k">LITERS</div><input id="fuelL" type="number" inputmode="decimal" placeholder="0.0"><div class="row"><span>分からなければ空欄でOK</span><span>L</span></div></div>';
   if (!D.car.tireDone) {
-    h += '<div class="note err" style="display:block;font-weight:700;line-height:1.6;border:2px solid var(--ng)"><div style="font-size:19px;margin-bottom:6px">⚠ 今月まだ空気圧を見ていません</div>今月最初の給油です。ガソリンスタンドで、タイヤの空気圧を必ず見てから記録してください。</div><div class="stack">';
-    h += '<button class="btn btn-primary" onclick="fuelSend(\'確認した\')">' + IC.check + '空気圧を見た（確認した）</button>';
-    h += '<button class="btn btn-ng" onclick="fuelSend(\'まだ\')">まだ見ていない</button></div>';
+    h += '<div class="sec">この給油の時に、空気圧も見ましたか？</div><div class="stack">';
+    h += '<button class="btn btn-ok" onclick="fuelSend(\'確認した\')">' + IC.check + '見た</button>';
+    h += '<button class="btn btn-soft" onclick="fuelSend(\'まだ\')">見ていない</button></div>';
   } else h += '<button class="btn btn-primary" onclick="fuelSend(\'\')">記録する</button>';
   view(h + '<button class="btn btn-ghost" onclick="home()">やめる</button></div>');
 }
