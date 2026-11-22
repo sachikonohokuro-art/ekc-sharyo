@@ -250,7 +250,8 @@ function home() {
 function askName(mode) {
   S.mode = mode;
   var me = loadName();
-  var h = '<div class="card">' + steps(1, mode === 'return' ? 3 : mode === 'fuel' ? 2 : 4) + '<div class="eyebrow">STEP 1</div><h2>' + (mode === 'return' ? '担当者を選択' : mode === 'fuel' ? '給油した人を選択' : '運転者を選択') + '</h2><p class="lead">次回からは自動で表示されます。</p>';
+  var warn = (mode === 'fuel' && !D.car.tireDone) ? '<div class="note err" style="display:block;font-weight:700;line-height:1.6;border:2px solid var(--ng);margin:0 0 12px"><div style="font-size:19px;margin-bottom:6px">⚠ ガソリンを入れる時に、空気圧も見てください</div>今月まだ、この車のタイヤの空気圧を見ていません。スタンドで給油する時に、タイヤの空気圧を確かめてから給油してください。</div>' : '';
+  var h = '<div class="card">' + steps(1, mode === 'return' ? 3 : mode === 'fuel' ? 2 : 4) + warn + '<div class="eyebrow">STEP 1</div><h2>' + (mode === 'return' ? '担当者を選択' : mode === 'fuel' ? '給油した人を選択' : '運転者を選択') + '</h2><p class="lead">次回からは自動で表示されます。</p>';
   if (me && D.people.indexOf(me) >= 0) h += '<button class="me" onclick="pickName(\'' + esc(me) + '\')">' + av(me) + '<div><small>前回の運転者</small><b>' + esc(me) + '</b></div></button><div class="sec">ほかの人</div>';
   h += '<div class="people">';
   D.people.forEach(function (n) { h += '<button class="person" onclick="pickName(\'' + esc(n) + '\')">' + av(n) + esc(n) + '</button>'; });
@@ -448,12 +449,6 @@ function fuelForm() {
 /* ---------- 給油だけを記録（運行中でもOK） ---------- */
 function fuelOnly() {
   S.fuel = true;
-  if (!D.car.tireDone && !S.fuelNoticed) {
-    view('<div class="card"><div class="eyebrow" style="color:var(--ng)">ガソリンを入れる前に</div><h2>空気圧も一緒に見てください</h2><p class="lead">今月まだ、この車のタイヤの空気圧を見ていません。</p>' +
-      '<div class="note err" style="display:block;font-weight:700;line-height:1.6;border:2px solid var(--ng)"><div style="font-size:19px;margin-bottom:6px">⚠ ガソリンを入れる時に、空気圧も見てください</div>スタンドで給油する時に、タイヤの空気圧を確かめてから給油してください。</div>' +
-      '<div class="stack"><button class="btn btn-primary" onclick="S.fuelNoticed=true;fuelOnly()">わかった</button><button class="btn btn-ghost" onclick="home()">やめる</button></div></div>');
-    return;
-  }
   var h = '<div class="card">' + steps(2, 2) + '<div class="eyebrow">給油</div><h2>給油を記録</h2><p class="lead">入れ終わったら記録してください。乗っていなくてもOKです。</p>';
   h += '<div class="meterbox"><div class="k">LITERS</div><input id="fuelL" type="number" inputmode="decimal" placeholder="0.0"><div class="row"><span>分からなければ空欄でOK</span><span>L</span></div></div>';
   if (!D.car.tireDone) {
