@@ -128,6 +128,11 @@ textarea.field{min-height:84px;resize:vertical}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .foot{text-align:center;font-size:11px;color:#94a3b8;margin-top:18px;letter-spacing:.06em}
 .list .opt{margin-bottom:8px}
+.ref{cursor:zoom-in}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:60;padding:14px}
+.zoom.on{display:flex}
+.zoom img{width:100%;max-height:82vh;object-fit:contain;border-radius:10px;background:#000}
+.zoom .zt{color:#fff;font-size:14px;margin-top:12px;opacity:.85;font-weight:700}
 </style>
 </head>
 <body>
@@ -219,6 +224,7 @@ function home() {
   h += '<div class="stat"><div class="k">オイル交換まで</div><div class="v num"' + (oilLeft !== null && oilLeft <= 500 ? ' style="color:var(--ng)"' : '') + '>' + (oilLeft === null ? '—' : km(oilLeft) + '<small>km</small>') + '</div>' + (oilLeft === null ? '' : '<div class="bar"><span style="width:' + oilPct + '%;' + (oilLeft <= 500 ? 'background:var(--ng)' : '') + '"></span></div>') + '</div>';
   h += '<div class="stat wide"><div><div class="k">本日の点検写真</div><div style="font-weight:700;margin-top:2px">' + (c.baseToday ? '撮影済み・' + esc(c.baseBy) + ' さん' : '未撮影') + '</div></div><span class="chip ' + (c.baseToday ? 'c-ok' : 'c-warn') + '" style="padding:5px 10px;font-size:12px">' + (c.baseToday ? 'OK' : '出発時に撮影') + '</span></div>';
   h += '</div></div><div class="stack">';
+  h += '<button class="btn btn-soft" onclick="askName(\'fuel\')">' + IC.fuel + '給油を記録する</button>';
 
   if (c.status === '使用中') {
     var me = loadName();
@@ -243,7 +249,7 @@ function home() {
 function askName(mode) {
   S.mode = mode;
   var me = loadName();
-  var h = '<div class="card">' + steps(1, mode === 'return' ? 3 : 4) + '<div class="eyebrow">STEP 1</div><h2>' + (mode === 'return' ? '担当者を選択' : '運転者を選択') + '</h2><p class="lead">次回からは自動で表示されます。</p>';
+  var h = '<div class="card">' + steps(1, mode === 'return' ? 3 : mode === 'fuel' ? 2 : 4) + '<div class="eyebrow">STEP 1</div><h2>' + (mode === 'return' ? '担当者を選択' : mode === 'fuel' ? '給油した人を選択' : '運転者を選択') + '</h2><p class="lead">次回からは自動で表示されます。</p>';
   if (me && D.people.indexOf(me) >= 0) h += '<button class="me" onclick="pickName(\'' + esc(me) + '\')">' + av(me) + '<div><small>前回の運転者</small><b>' + esc(me) + '</b></div></button><div class="sec">ほかの人</div>';
   h += '<div class="people">';
   D.people.forEach(function (n) { h += '<button class="person" onclick="pickName(\'' + esc(n) + '\')">' + av(n) + esc(n) + '</button>'; });
@@ -258,6 +264,7 @@ function askName(mode) {
 function pickName(n) {
   S.name = n; saveName(n);
   if (S.mode === 'return') { S.photos = {}; photos4(2, 3, '整備後の車両を撮影', returnMeter); return; }
+  if (S.mode === 'fuel') { fuelOnly(); return; }
   boardCompare();
 }
 
@@ -265,14 +272,28 @@ function pickName(n) {
 function boardCompare() {
   if (!D.car.hasBase) { S.check = '基準写真なし'; boardPhotosOrMeter(); return; }
   run('apiBaselinePhotos', [D.car.id], '前回の写真を読み込み中…').then(function (list) {
-    var h = '<div class="card">' + steps(2, 4) + '<div class="eyebrow">STEP 2 ・ 外観チェック</div><h2>前回の写真と見比べてください</h2><p class="lead">車の周りを一周して、新しいキズ・へこみがないか確認します。</p>';
+    var h = '<div class="card">' + steps(2, 4) + '<div class="eyebrow">STEP 2 ・ 外観チェック</div><h2>前回の写真と見比べてください</h2><p class="lead">車の周りを一周して、新しいキズ・へこみがないか確認します。写真をタップすると大きく見られます。</p>';
     h += '<div class="meta">' + av(D.car.baseBy || '?') + '<div><b>' + esc(D.car.baseBy) + '</b> さんが撮影<br>' + esc(D.car.baseAt) + '</div></div><div class="grid2">';
-    list.forEach(function (p) { h += '<div class="ref">' + (p.data ? '<img src="' + p.data + '">' : '') + '<span class="tag">' + esc(p.label) + '</span></div>'; });
+    list.forEach(function (p) { h += '<div class="ref"' + (p.data ? ' onclick="zoomPhoto(this)"' : '') + '>' + (p.data ? '<img src="' + p.data + '">' : '') + '<span class="tag">' + esc(p.label) + '</span></div>'; });
     h += '</div></div><div class="stack">';
     h += '<button class="btn btn-ok" onclick="S.check=\'変わらん\';boardPhotosOrMeter()">' + IC.check + '異常なし</button>';
     h += '<button class="btn btn-ng" onclick="damageForm()">' + IC.alert + '新しいキズ・へこみがある</button></div>';
     view(h);
   });
+}
+function zoomPhoto(el) {
+  var img = el.querySelector('img'), tag = el.querySelector('.tag');
+  if (!img) return;
+  var o = $('zoom');
+  if (!o) {
+    o = document.createElement('div'); o.id = 'zoom'; o.className = 'zoom';
+    o.onclick = function () { o.classList.remove('on'); };
+    o.innerHTML = '<img alt=""><div class="zt"></div>';
+    document.body.appendChild(o);
+  }
+  o.querySelector('img').src = img.src;
+  o.querySelector('.zt').textContent = (tag ? tag.textContent : '') + '（タップで閉じる）';
+  o.classList.add('on');
 }
 function damageForm() {
   S.check = '変わっとる'; S.dmg = [];
@@ -340,7 +361,7 @@ function upload(list) {
 /* ---------- メーター ---------- */
 function meterForm(n, total, title, onNext, optional) {
   var last = D.car.lastMeter;
-  var h = '<div class="card">' + steps(n, total) + '<div class="eyebrow">STEP ' + n + ' ・ メーター</div><h2>' + esc(title) + '</h2><p class="lead">メーターに表示されている総走行距離を入力してください。</p>';
+  var h = '<div class="card">' + steps(n, total) + '<div class="eyebrow">STEP ' + n + ' ・ メーター</div><h2>' + esc(title) + '</h2><p class="lead">メーターに表示されている総走行距離を入力してください。車庫の中で少し動かしただけでも、表示されている数字をそのまま入れてください。</p>';
   h += '<div class="meterbox"><div class="k">ODOMETER</div><input id="meter" type="number" inputmode="numeric" placeholder="000000" oninput="meterDiff()"><div class="row"><span>前回 <span class="num">' + (last ? km(last) + ' km' : '記録なし') + '</span></span><span class="diff" id="mDiff"></span></div></div>';
   h += '<div id="mWarn"></div><button class="btn btn-primary" onclick="checkMeter()">次へ</button>';
   if (optional) h += '<button class="btn btn-ghost" onclick="S.meter=\'\';S.meterNext()">分からないのでスキップ</button>';
@@ -422,6 +443,24 @@ function fuelForm() {
     h += '<button class="btn btn-soft" onclick="S.tire=\'まだ\';S.fuelL=$(\'fuelL\').value;alightSend()">まだ確認していない</button></div>';
   } else h += '<button class="btn btn-primary" onclick="S.fuelL=$(\'fuelL\').value;alightSend()">記録する</button>';
   view(h + '</div>');
+}
+/* ---------- 給油だけを記録（運行中でもOK） ---------- */
+function fuelOnly() {
+  S.fuel = true;
+  var h = '<div class="card">' + steps(2, 2) + '<div class="eyebrow">給油</div><h2>給油を記録</h2><p class="lead">入れた時にすぐ記録できます。乗っていなくてもOKです。</p>';
+  h += '<div class="meterbox"><div class="k">LITERS</div><input id="fuelL" type="number" inputmode="decimal" placeholder="0.0"><div class="row"><span>分からなければ空欄でOK</span><span>L</span></div></div>';
+  if (!D.car.tireDone) {
+    h += '<div class="note info">今月最初の給油です。ガソリンスタンドでタイヤの空気圧を確認しましたか？</div><div class="stack">';
+    h += '<button class="btn btn-ok" onclick="fuelSend(\'確認した\')">' + IC.check + '空気圧を確認した</button>';
+    h += '<button class="btn btn-soft" onclick="fuelSend(\'まだ\')">まだ確認していない</button></div>';
+  } else h += '<button class="btn btn-primary" onclick="fuelSend(\'\')">記録する</button>';
+  view(h + '<button class="btn btn-ghost" onclick="home()">やめる</button></div>');
+}
+function fuelSend(tire) {
+  var l = $('fuelL').value;
+  run('apiFuel', [{ carId: D.car.id, name: S.name, fuelL: l, tire: tire || '' }], '給油を記録中…').then(function () {
+    finish('給油を記録しました', 'ありがとうございます。', [['運転者', S.name], ['給油量', l ? l + ' L' : '未入力']], '');
+  });
 }
 function alightSend() {
   var dlist = (S.dmg || []).map(function (d, i) { return { label: '異常' + (i + 1), data: d }; });
