@@ -278,7 +278,7 @@ function boardCompare() {
     h += '<div class="meta">' + av(D.car.baseBy || '?') + '<div><b>' + esc(D.car.baseBy) + '</b> さんが撮影<br>' + esc(D.car.baseAt) + '</div></div><div class="grid2">';
     list.forEach(function (p) { h += '<div class="ref"' + (p.data ? ' onclick="zoomPhoto(this)"' : '') + '>' + (p.data ? '<img src="' + p.data + '">' : '') + '<span class="tag">' + esc(p.label) + '</span></div>'; });
     h += '</div></div><div class="stack">';
-    h += '<button class="btn btn-ok" onclick="S.check=\'変わらん\';boardPhotosOrMeter()">' + IC.check + '異常なし</button>';
+    h += '<button class="btn btn-ok" onclick="S.check=\'異常なし\';boardPhotosOrMeter()">' + IC.check + '異常なし</button>';
     h += '<button class="btn btn-ng" onclick="damageForm()">' + IC.alert + '新しいキズ・へこみがある</button></div>';
     view(h);
   });
@@ -298,7 +298,7 @@ function zoomPhoto(el) {
   o.classList.add('on');
 }
 function damageForm() {
-  S.check = '変わっとる'; S.dmg = [];
+  S.check = 'キズあり'; S.dmg = [];
   var h = '<div class="card">' + steps(2, 4) + '<div class="eyebrow" style="color:var(--ng)">キズの報告</div><h2>見つけたキズを撮影</h2><p class="lead">場所が分かるように1〜3枚。見つけた方が疑われることはありません。</p>';
   h += '<div class="grid2" id="dmgSlots"></div><div class="sec">場所と状態</div><textarea class="field" id="dmgNote" placeholder="例）右後ろのドアにこすりキズ"></textarea>';
   h += '<button class="btn btn-primary" style="margin-top:14px" id="dmgNext" disabled onclick="S.dmgNote=$(\'dmgNote\').value;boardPhotosOrMeter()">次へ</button></div>';
@@ -407,9 +407,9 @@ function boardSend() {
     });
   }).then(function (res) {
     var extra = (res.notes || []).map(function (n) { return '<div class="note warn">' + esc(n) + '</div>'; }).join('');
-    if (S.check === '変わっとる') extra += '<div class="note info">キズの報告を管理者に送信しました。ご協力ありがとうございます。</div>';
+    if (S.check === 'キズあり') extra += '<div class="note info">キズの報告を管理者に送信しました。ご協力ありがとうございます。</div>';
     finish('出発を記録しました', '帰着したら、もう一度QRコードを読み取って「帰着を報告する」を押してください。',
-      [['運転者', S.name], ['出発メーター', km(S.meter) + ' km'], ['外観チェック', S.check === '変わっとる' ? 'キズを報告' : S.check === '変わらん' ? '異常なし' : '初回登録'], ['点検写真', (S.photos && Object.keys(S.photos).length) ? '4枚 撮影' : '本日撮影済み']], extra);
+      [['運転者', S.name], ['出発メーター', km(S.meter) + ' km'], ['外観チェック', S.check === 'キズあり' ? 'キズを報告' : S.check === '異常なし' ? '異常なし' : '初回登録'], ['点検写真', (S.photos && Object.keys(S.photos).length) ? '4枚 撮影' : '本日撮影済み']], extra);
   }).catch(function () {});
 }
 

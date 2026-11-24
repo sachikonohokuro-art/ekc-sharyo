@@ -418,7 +418,7 @@ function openCar(id) {
       const chips = [];
       if (l.meter) chips.push('<span class="chip num">メーター ' + km(l.meter) + ' km</span>');
       if (l.dist) chips.push('<span class="chip num">走行 ' + km(l.dist) + ' km</span>');
-      if (l.check) chips.push('<span class="chip' + (l.check === '変わっとる' ? ' ng' : '') + '">外観 ' + esc(l.check === '変わらん' ? '異常なし' : l.check === '変わっとる' ? 'キズあり' : l.check) + '</span>');
+      if (l.check) chips.push('<span class="chip' + (l.check === '変わっとる' || l.check === 'キズあり' ? ' ng' : '') + '">外観 ' + esc(l.check === '変わらん' ? '異常なし' : l.check === '変わっとる' ? 'キズあり' : l.check) + '</span>');
       if (l.issue && l.issue !== 'なし') chips.push('<span class="chip ng">' + esc(l.issue) + '</span>');
       if (l.fuel) chips.push('<span class="chip">給油 ' + esc(l.fuel) + (/^\d/.test(String(l.fuel)) ? 'L' : '') + '</span>');
       if (l.tire) chips.push('<span class="chip">タイヤ ' + esc(l.tire) + '</span>');
