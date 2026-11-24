@@ -365,14 +365,16 @@ function meterForm(n, total, title, onNext, optional) {
   var last = D.car.lastMeter;
   var h = '<div class="card">' + steps(n, total) + '<div class="eyebrow">STEP ' + n + ' ・ メーター</div><h2>' + esc(title) + '</h2><p class="lead">メーターに表示されている総走行距離を入力してください。車庫の中で少し動かしただけでも、表示されている数字をそのまま入れてください。</p>';
   h += '<div class="meterbox"><div class="k">ODOMETER</div><input id="meter" type="number" inputmode="numeric" placeholder="000000" oninput="meterDiff()"><div class="row"><span>前回 <span class="num">' + (last ? km(last) + ' km' : '記録なし') + '</span></span><span class="diff" id="mDiff"></span></div></div>';
+  if (D.car.meterOff) h += '<div class="note info" style="display:block;margin:0 0 12px;line-height:1.6">この車はメーターを交換しています。<b>メーターに表示されている数字をそのまま</b>入力してください。交換前の距離（' + km(D.car.meterOff) + ' km）は自動で足します。</div>';
   h += '<div id="mWarn"></div><button class="btn btn-primary" onclick="checkMeter()">次へ</button>';
   if (optional) h += '<button class="btn btn-ghost" onclick="S.meter=\'\';S.meterNext()">分からないのでスキップ</button>';
   view(h + '</div>');
   S.meterNext = onNext; S.meterConfirmed = false;
 }
-function meterDiff() { var v = Number($('meter').value), last = D.car.lastMeter; $('mDiff').textContent = v && last ? (v - last >= 0 ? '+' : '') + km(v - last) + ' km' : ''; S.meterConfirmed = false; $('mWarn').innerHTML = ''; }
+function realM(v) { var o = Number(D.car.meterOff) || 0; return v && o && v < o ? v + o : v; }
+function meterDiff() { var raw = Number($('meter').value), v = realM(raw), last = D.car.lastMeter; $('mDiff').textContent = (v && v !== raw ? '実際 ' + km(v) + ' km　' : '') + (v && last ? (v - last >= 0 ? '+' : '') + km(v - last) + ' km' : ''); S.meterConfirmed = false; $('mWarn').innerHTML = ''; }
 function checkMeter(force) {
-  var v = Number($('meter').value), last = D.car.lastMeter;
+  var v = realM(Number($('meter').value)), last = D.car.lastMeter;
   if (!v) { $('mWarn').innerHTML = '<div class="note err">メーターの数字を入力してください。</div>'; return; }
   var lim = S.meterNext === alightIssue ? 500 : 1000;
   var why = !last ? '' : String(Math.round(v)).length !== String(Math.round(last)).length ? 'ケタの数が前回と違います' : v < last ? '前回より小さい数字です' : v > last + lim ? '前回より ' + km(lim) + ' km以上増えています' : '';

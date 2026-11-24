@@ -376,6 +376,7 @@ function openCar(id) {
     h += '<div style="grid-column:1/-1;margin-top:6px;padding-top:12px;border-top:1px dashed #d0d5dd"><b>台帳（会社の車両一覧）</b></div>' +
       '<div><label for="iqr">QRで乗る・降りるを記録</label><select class="f" id="iqr"><option value="する"' + (f.qr !== 'なし' ? ' selected' : '') + '>する（本社の運用車）</option><option value="なし"' + (f.qr === 'なし' ? ' selected' : '') + '>しない（台帳と期限の管理だけ）</option></select><div class="hint">しない車は、空き・タイヤの知らせ・QR印刷に出ません。車検・点検・保険の知らせは届きます</div></div>' +
       fl.map(([k, l, ph]) => '<div><label for="i_' + k + '">' + l + '</label><input class="f" id="i_' + k + '" value="' + esc(f[k] || '') + '" placeholder="' + esc(ph) + '"></div>').join('') +
+      '<div><label for="i_meterOff">メーター交換前の距離（km）</label><input class="f num" id="i_meterOff" inputmode="numeric" value="' + esc(f.meterOff || '') + '" placeholder="例）118166"><div class="hint">メーターを交換した車だけ入力します。ドライバーが入力した数字に自動で足します</div></div>' +
       '<div style="grid-column:1/-1"><label for="i_memo2">台帳メモ</label><textarea class="f" id="i_memo2" rows="2" style="resize:vertical;min-height:60px">' + esc(f.memo2 || '') + '</textarea><div class="hint">リースの契約・税金・連絡先など。修理から戻っても消えません</div></div>'; }
   h += '</div><div class="acts"><button class="btn b-pri" id="save">' + (id ? '保存する' : '車を追加') + '</button>' + (id ? '<span style="flex:1"></span><button class="btn b-ng" id="del">この車を削除</button>' : '') + '</div></div>';
   if (id) h += '<div class="box"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><h4 style="margin:0">整備・手続きの記録</h4><span style="flex:1"></span><button class="btn b-soft" id="mAddCar">＋ 予定・記録を追加</button></div><div id="mCar" class="loading" style="padding:12px">読み込み中…</div></div>';
@@ -385,7 +386,7 @@ function openCar(id) {
   if (!document.getElementById('dw').classList.contains('open')) { document.getElementById('dw').classList.add('open'); history.pushState({ dw: 1 }, ''); }
   $('dx').onclick = $('dback').onclick = $('dback2').onclick = closeDrawer;
   $('save').onclick = () => {
-    const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '', shaken: $('fShaken').value, note: id ? $('fNote').value : undefined, tenken: id ? $('fTenken').value : undefined, hoken: id ? $('fHoken').value : undefined, info: (() => { const o = { qr: $('iqr').value }; ['area', 'company', 'model', 'maker', 'color', 'tanto', 'lease', 'leaseEnd', 'mente', 'gas', 'etc', 'policy', 'memo2'].forEach(k => o[k] = $('i_' + k).value); return o; })() };
+    const p = { id: id || '', name: $('fName').value, plate: $('fPlate').value, oilNext: $('fOil').value.replace(/[^0-9]/g, ''), status: id ? $('fSt').value : '', shaken: $('fShaken').value, note: id ? $('fNote').value : undefined, tenken: id ? $('fTenken').value : undefined, hoken: id ? $('fHoken').value : undefined, info: (() => { const o = { qr: $('iqr').value }; ['area', 'company', 'model', 'maker', 'color', 'tanto', 'lease', 'leaseEnd', 'mente', 'gas', 'etc', 'policy', 'memo2'].forEach(k => o[k] = $('i_' + k).value); o.meterOff = $('i_meterOff').value.replace(/[^0-9]/g, ''); return o; })() };
     if (!p.name.trim()) { toast('車の名前を入れてください'); return; }
     if (id && p.status === '使用中') p.status = '';
     $('save').disabled = true;
