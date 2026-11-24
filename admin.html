@@ -195,7 +195,7 @@ table.ct{display:none}
   <div class="ttl">e-KC group<span>|</span>車両管理</div>
   <div class="sp"></div>
   <span class="upd" id="upd"></span>
-  <button class="tbtn" id="reload" style="display:none">↻ 最新にする</button>
+  <button class="tbtn" id="reload" style="display:none">↻ 更新</button>
   <a class="tbtn" href="qr.html" target="_blank" rel="noopener">QRを印刷</a>
   <a class="tbtn" id="sheetBtn" href="#" target="_blank" rel="noopener" style="display:none">記録の表を開く</a>
   <button class="tbtn" id="lineQr">LINE友だち追加</button>
@@ -210,7 +210,7 @@ table.ct{display:none}
 <main class="wrap" id="app"><div class="loading">読み込み中…</div></main>
 
 <div id="dw"><div class="shade" id="shade"></div><aside class="drawer" id="drawer"></aside></div>
-<div class="dlg" id="dlg"><div class="in"><h4 id="dlgT"></h4><p id="dlgB"></p><div class="acts" style="justify-content:flex-end"><button class="btn b-ghost" id="dlgNo">やめる</button><button class="btn b-ng" id="dlgYes">消す</button></div></div></div>
+<div class="dlg" id="dlg"><div class="in"><h4 id="dlgT"></h4><p id="dlgB"></p><div class="acts" style="justify-content:flex-end"><button class="btn b-ghost" id="dlgNo">キャンセル</button><button class="btn b-ng" id="dlgYes">削除する</button></div></div></div>
 <div class="big" id="big"><img id="bigImg" alt="写真"></div>
 <div class="toast" id="toast"></div>
 
@@ -221,7 +221,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const km = n => Number(n || 0).toLocaleString('ja-JP');
 let KEY = '', D = null, TAB = 'cars', Q = '', photoCache = {}, M = null, MF = { car: '', type: '', year: '' }, KF = '', AF = '';
-const KFL = { free: '空き', use: '使用中', fix: '修理・車検など', warn: '気をつける車' };
+const KFL = { free: '空き', use: '使用中', fix: '修理・車検など', warn: '要注意の車' };
 function isWarn(c) { return oilInfo(c).alert || shakenInfo(c).alert || (dueInfo(c.tenkenDays, 30) || {}).alert || (dueInfo(c.hokenDays, 30) || {}).alert || (c.status === '使用中' && c.sinceDay && c.sinceDay < D.today); }
 function kfMatch(c) { return !KF || (KF === 'free' ? c.status === '空き' && c.qr !== false : KF === 'use' ? c.status === '使用中' : KF === 'fix' ? isFix(c.status) : isWarn(c)); }
 try { KEY = localStorage.getItem('ekcAdminKey') || ''; } catch (e) {}
@@ -241,7 +241,7 @@ $('big').onclick = () => $('big').classList.remove('on');
 /* ---------- ログイン ---------- */
 function login(msg) {
   $('reload').style.display = $('logout').style.display = $('sheetBtn').style.display = 'none'; $('upd').textContent = '';
-  $('app').innerHTML = '<div class="login"><h2>管理ページ</h2><p>合言葉を入れてください。このパソコンでは次から入れんで済みます。</p>' +
+  $('app').innerHTML = '<div class="login"><h2>管理ページ</h2><p>合言葉を入力してください。このパソコンでは、次回から入力は不要です。</p>' +
     '<input class="f" id="key" type="password" autocomplete="current-password" placeholder="合言葉"><div class="err" id="lerr"></div>' +
     '<div class="acts"><button class="btn b-pri" id="go" style="width:100%;justify-content:center;padding:12px">入る</button></div></div>';
   if (msg) { $('lerr').textContent = msg; $('lerr').style.display = 'block'; }
@@ -291,7 +291,7 @@ function render() {
     '<div class="kpi' + (KF === 'free' ? ' on' : '') + '" data-k="free" title="クリックで、この車だけ表示"><i style="background:var(--ok)"></i><div><small>空き</small><b class="num">' + n.free + '</b></div></div>' +
     '<div class="kpi' + (KF === 'use' ? ' on' : '') + '" data-k="use" title="クリックで、この車だけ表示"><i style="background:var(--warn)"></i><div><small>使用中</small><b class="num">' + n.use + '</b></div></div>' +
     '<div class="kpi' + (KF === 'fix' ? ' on' : '') + '" data-k="fix" title="クリックで、この車だけ表示"><i style="background:var(--ng)"></i><div><small>修理・車検など</small><b class="num">' + n.fix + '</b></div></div>' +
-    '<div class="kpi' + (KF === 'warn' ? ' on' : '') + '" data-k="warn" title="クリックで、この車だけ表示"><i style="background:#7c3aed"></i><div><small>気をつける車</small><b class="num">' + n.warn + '</b></div></div></div>';
+    '<div class="kpi' + (KF === 'warn' ? ' on' : '') + '" data-k="warn" title="クリックで、この車だけ表示"><i style="background:#7c3aed"></i><div><small>要注意の車</small><b class="num">' + n.warn + '</b></div></div></div>';
   h += '<div class="tabs"><button class="tab' + (TAB === 'cars' ? ' on' : '') + '" data-t="cars">車の一覧</button>' +
     '<button class="tab' + (TAB === 'dmg' ? ' on' : '') + '" data-t="dmg">キズの報告' + (D.dmg.length ? '<em>' + D.dmg.length + '</em>' : '') + '</button>' +
     '<button class="tab' + (TAB === 'mnt' ? ' on' : '') + '" data-t="mnt">整備・手続き</button>' +
@@ -319,36 +319,36 @@ function render() {
 function carCard(c) {
   const o = oilInfo(c), s = shakenInfo(c), late = c.status === '使用中' && c.sinceDay && c.sinceDay < D.today;
   const chips = [];
-  if (late) chips.push('<span class="cc-chip ng">降りる入力なし</span>');
+  if (late) chips.push('<span class="cc-chip ng">「降りる」未入力</span>');
   [['点検', dueInfo(c.tenkenDays, 30)], ['保険', dueInfo(c.hokenDays, 30)]].forEach(x => { if (x[1] && x[1].alert) chips.push('<span class="cc-chip ' + (x[1].cls === 'o-ng' ? 'ng' : 'warn') + '">' + x[0] + ' ' + x[1].t + '</span>'); });
   return '<div class="cc" data-id="' + esc(c.id) + '">' +
     '<div class="cc-top"><div><div class="cc-name">' + esc(c.name) + '</div><div class="cc-sub num">' + esc(c.id) + ((c.info || {}).area ? '　' + esc(c.info.area) : '') + (c.qr === false ? '　台帳のみ' : '') + '</div></div>' + stPill(c.status) + '</div>' +
     '<div class="cc-plate"><span class="plate">' + esc(c.plate) + '</span></div>' +
     (planTxt(c) ? '<div class="cc-plan">' + esc(planTxt(c)) + '</div>' : '') +
-    (c.status === '使用中' ? '<div class="cc-who">使っとる人：<b>' + esc(c.user) + '</b>　' + esc(c.since) + ' 出発</div>' : '') +
+    (c.status === '使用中' ? '<div class="cc-who">使用者：<b>' + esc(c.user) + '</b>　' + esc(c.since) + ' 出発</div>' : '') +
     '<div class="cc-grid"><div class="cc-t"><small>オイル交換</small><b class="oil num ' + o.cls + '">' + o.t + '</b></div>' +
     '<div class="cc-t"><small>車検</small><b class="oil num ' + s.cls + '">' + s.t + '</b>' + (c.shaken ? '<span>' + ymd(c.shaken) + ' まで</span>' : '') + '</div></div>' +
     (chips.length ? '<div class="cc-chips">' + chips.join('') + '</div>' : '') +
-    '<div class="cc-foot"><span class="cc-mark">空気圧：今月 <b class="' + (c.tire ? 'ok' : 'no') + '">' + (c.tire ? '済' : '未') + '</b>　写真：今日 <b class="' + (c.photoToday ? 'ok' : 'no') + '">' + (c.photoToday ? '済' : '未') + '</b></span><span class="btn b-soft edit">直す ›</span></div></div>';
+    '<div class="cc-foot"><span class="cc-mark">空気圧：今月 <b class="' + (c.tire ? 'ok' : 'no') + '">' + (c.tire ? '済' : '未') + '</b>　写真：今日 <b class="' + (c.photoToday ? 'ok' : 'no') + '">' + (c.photoToday ? '済' : '未') + '</b></span><span class="btn b-soft edit">編集 ›</span></div></div>';
 }
 function carsView() {
   const q = Q.trim();
   const list = D.cars.filter(c => (!q || (c.name + c.plate + c.id + c.user + ((c.info || {}).area || '')).indexOf(q) >= 0) && kfMatch(c) && (!AF || (c.info || {}).area === AF));
   const areas = Array.from(new Set(D.cars.map(c => (c.info || {}).area).filter(v => v)));
-  let h = '<section class="card"><div class="head"><h2>車の一覧</h2>' + (KF ? '<button class="btn b-soft" id="kfClear" style="margin-left:8px">「' + KFL[KF] + '」だけ表示中　× 全部に戻す</button>' : '') + '<span class="sp"></span><select class="f" id="af" style="width:auto;margin-right:8px"><option value="">所属：すべて（' + D.cars.length + '台）</option>' + areas.map(a => '<option' + (AF === a ? ' selected' : '') + '>' + esc(a) + '</option>').join('') + '</select><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を足す</button></div>';
+  let h = '<section class="card"><div class="head"><h2>車の一覧</h2>' + (KF ? '<button class="btn b-soft" id="kfClear" style="margin-left:8px">「' + KFL[KF] + '」だけ表示中　× 全部に戻す</button>' : '') + '<span class="sp"></span><select class="f" id="af" style="width:auto;margin-right:8px"><option value="">所属：すべて（' + D.cars.length + '台）</option>' + areas.map(a => '<option' + (AF === a ? ' selected' : '') + '>' + esc(a) + '</option>').join('') + '</select><input class="search" id="q" placeholder="車・ナンバー・人で探す" value="' + esc(Q) + '"><button class="btn b-pri" id="addCar">＋ 車を追加</button></div>';
   if (!list.length) return h + '<div class="empty">見つかりません</div></section>';
   h += '<div class="cm">' + list.map(carCard).join('') + '</div>';
-  h += '<table class="ct"><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使っとる人</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th>車検まで</th><th class="hide-s">点検・保険</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
+  h += '<table class="ct"><thead><tr><th>車</th><th>ナンバー</th><th>状態</th><th class="hide-s">使用者</th><th class="r hide-s">メーター</th><th>オイル交換まで</th><th>車検まで</th><th class="hide-s">点検・保険</th><th class="hide-s">タイヤ<br>今月</th><th class="hide-s">今日の<br>写真</th><th></th></tr></thead><tbody>';
   list.forEach(c => {
     const o = oilInfo(c), late = c.status === '使用中' && c.sinceDay && c.sinceDay < D.today;
     h += '<tr class="row" data-id="' + esc(c.id) + '"><td class="car"><b>' + esc(c.name) + '</b><small class="num">' + esc(c.id) + ((c.info || {}).area ? '　' + esc(c.info.area) : '') + (c.qr === false ? '　台帳のみ' : '') + '</small></td>' +
       '<td><span class="plate">' + esc(c.plate) + '</span></td><td>' + stPill(c.status) + (planTxt(c) ? '<div class="hint" style="max-width:240px;white-space:normal">' + esc(planTxt(c)) + '</div>' : '') + '</td>' +
-      '<td class="who hide-s">' + (c.status === '使用中' ? '<b>' + esc(c.user) + '</b><small>' + esc(c.since) + ' 出発</small>' + (late ? '<div class="alert">降りる入力なし</div>' : '') : '<small>—</small>') + '</td>' +
+      '<td class="who hide-s">' + (c.status === '使用中' ? '<b>' + esc(c.user) + '</b><small>' + esc(c.since) + ' 出発</small>' + (late ? '<div class="alert">「降りる」未入力</div>' : '') : '<small>—</small>') + '</td>' +
       '<td class="r num hide-s">' + (c.last ? km(c.last) : '—') + '</td><td><span class="oil num ' + o.cls + '">' + o.t + '</span></td>' +
       '<td>' + (function () { const s = shakenInfo(c); return '<span class="oil num ' + s.cls + '">' + s.t + '</span>' + (c.shaken ? '<div class="hint num">' + esc(c.shaken.slice(0, 4) + '/' + Number(c.shaken.slice(5, 7)) + '/' + Number(c.shaken.slice(8, 10))) + 'まで</div>' : ''); })() + '</td>' +
       '<td class="hide-s">' + [['点検', dueInfo(c.tenkenDays, 30)], ['保険', dueInfo(c.hokenDays, 30)]].filter(x => x[1]).map(x => '<div class="oil num ' + x[1].cls + '" style="font-size:13px">' + x[0] + ' ' + x[1].t + '</div>').join('') + (c.tenken || c.hoken ? '' : '<span class="oil o-none">—</span>') + '</td>' +
       '<td class="hide-s"><span class="mark ' + (c.tire ? 'm-ok">✓' : 'm-no">—') + '</span></td>' +
-      '<td class="hide-s"><span class="mark ' + (c.photoToday ? 'm-ok">✓' : 'm-no">—') + '</span></td><td class="r"><span class="btn b-soft edit">直す ›</span></td></tr>';
+      '<td class="hide-s"><span class="mark ' + (c.photoToday ? 'm-ok">✓' : 'm-no">—') + '</span></td><td class="r"><span class="btn b-soft edit">編集 ›</span></td></tr>';
   });
   return h + '</tbody></table></section>';
 }
@@ -362,23 +362,23 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawe
 function openCar(id) {
   const c = id ? D.cars.filter(x => x.id === id)[0] : { id: '', name: '', plate: '', status: '空き', oilNext: '', last: 0, shaken: '' };
   const sts = ['空き'].concat(D.statuses);
-  let h = '<div class="dtop"><button class="dback" id="dback">← 一覧に戻る</button><div><h3>' + (id ? esc(c.name) : '車を足す') + '</h3><small>' + (id ? esc(c.id) + '　' + esc(c.plate) : '新しい車のQRは、足したあと「QRを印刷」から出せます') + '</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
-  h += '<div class="box"><h4>' + (id ? '車の情報を直す' : '新しい車') + '</h4><div class="grid">' +
+  let h = '<div class="dtop"><button class="dback" id="dback">← 一覧に戻る</button><div><h3>' + (id ? esc(c.name) : '車を追加') + '</h3><small>' + (id ? esc(c.id) + '　' + esc(c.plate) : '新しい車のQRは、追加したあと「QRを印刷」から出力できます') + '</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
+  h += '<div class="box"><h4>' + (id ? '車の情報を編集' : '新しい車') + '</h4><div class="grid">' +
     '<div><label for="fName">車の名前</label><input class="f" id="fName" value="' + esc(c.name) + '" placeholder="例）ハイエース 白"></div>' +
     '<div><label for="fPlate">ナンバー</label><input class="f" id="fPlate" value="' + esc(c.plate) + '" placeholder="例）愛媛400と5081"></div>' +
-    '<div><label for="fOil">次のオイル交換（km）</label><input class="f num" id="fOil" inputmode="numeric" value="' + (c.oilNext && c.oilNext !== '不明' ? c.oilNext : '') + '" placeholder="シールの「次回交換km」"><div class="hint">' + (c.oilProv ? 'いまは仮の距離です。シールの数字を入れると仮が外れます' : '空にすると、次に乗る人にシールの数字を聞きます') + '</div></div>';
+    '<div><label for="fOil">次のオイル交換（km）</label><input class="f num" id="fOil" inputmode="numeric" value="' + (c.oilNext && c.oilNext !== '不明' ? c.oilNext : '') + '" placeholder="シールの「次回交換km」"><div class="hint">' + (c.oilProv ? '現在は仮の距離です。シールの数字を入力すると正式な距離になります' : '空欄にすると、次に乗る人にシールの数字を確認します') + '</div></div>';
   h += '<div><label for="fShaken">車検の期限</label><input class="f num" id="fShaken" type="date" value="' + esc(c.shaken || '') + '"><div class="hint">車検証の「有効期間の満了する日」。60・30・14・7日前と前日、過ぎたら毎朝LINEで知らせます</div></div>';
-  if (id) h += '<div><label for="fSt">状態</label><select class="f" id="fSt">' + (c.status === '使用中' ? '<option selected>使用中</option>' : '') + sts.map(s => '<option' + (s === c.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select><div class="hint">' + (c.status === '使用中' ? esc(c.user) + 'さんが使用中。変えると「降りる」を代わりに終わらせます' : 'メーター ' + km(c.last) + ' km') + '</div></div>';
+  if (id) h += '<div><label for="fSt">状態</label><select class="f" id="fSt">' + (c.status === '使用中' ? '<option selected>使用中</option>' : '') + sts.map(s => '<option' + (s === c.status ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select><div class="hint">' + (c.status === '使用中' ? esc(c.user) + 'さんが使用中です。変更すると「降りる」を代わりに記録します' : 'メーター ' + km(c.last) + ' km') + '</div></div>';
   if (id) h += '<div><label for="fTenken">12か月点検の期限</label><input class="f num" id="fTenken" type="date" value="' + esc(c.tenken || '') + '"><div class="hint">30・14・7日前と前日、過ぎたら毎朝LINEで知らせます</div></div>' +
     '<div><label for="fHoken">保険の満期日</label><input class="f num" id="fHoken" type="date" value="' + esc(c.hoken || '') + '"><div class="hint">60・30・14・7日前と前日に知らせます</div></div>' +
     '<div style="grid-column:1/-1"><label for="fNote">備考（使えない期間や、予定の細かいことなど）</label><textarea class="f" id="fNote" rows="2" style="resize:vertical;min-height:60px" placeholder="例）11/20〜22は社長の出張で使用予定">' + esc(c.note || '') + '</textarea><div class="hint">修理・車検から「空き」に戻すと消えます</div></div>';
-  { const f = c.info || {}, fl = [['area', '所属', '例）本社'], ['company', '会社', ''], ['model', '車種', '例）NV200バネット'], ['maker', 'メーカー', ''], ['color', '色', ''], ['tanto', '担当者', ''], ['lease', 'リース会社', '会社の持ち物なら空'], ['leaseEnd', 'リース満了日', '例）2028-05-19'], ['mente', 'メンテナンスリース', 'あり／なし'], ['gas', 'ガソリンカード', '例）R0004'], ['etc', 'ETCカード', ''], ['policy', '証券番号', '']];
+  { const f = c.info || {}, fl = [['area', '所属', '例）本社'], ['company', '会社', ''], ['model', '車種', '例）NV200バネット'], ['maker', 'メーカー', ''], ['color', '色', ''], ['tanto', '担当者', ''], ['lease', 'リース会社', '会社所有の場合は空欄'], ['leaseEnd', 'リース満了日', '例）2028-05-19'], ['mente', 'メンテナンスリース', 'あり／なし'], ['gas', 'ガソリンカード', '例）R0004'], ['etc', 'ETCカード', ''], ['policy', '証券番号', '']];
     h += '<div style="grid-column:1/-1;margin-top:6px;padding-top:12px;border-top:1px dashed #d0d5dd"><b>台帳（会社の車両一覧）</b></div>' +
       '<div><label for="iqr">QRで乗る・降りるを記録</label><select class="f" id="iqr"><option value="する"' + (f.qr !== 'なし' ? ' selected' : '') + '>する（本社の運用車）</option><option value="なし"' + (f.qr === 'なし' ? ' selected' : '') + '>しない（台帳と期限の管理だけ）</option></select><div class="hint">しない車は、空き・タイヤの知らせ・QR印刷に出ません。車検・点検・保険の知らせは届きます</div></div>' +
       fl.map(([k, l, ph]) => '<div><label for="i_' + k + '">' + l + '</label><input class="f" id="i_' + k + '" value="' + esc(f[k] || '') + '" placeholder="' + esc(ph) + '"></div>').join('') +
       '<div style="grid-column:1/-1"><label for="i_memo2">台帳メモ</label><textarea class="f" id="i_memo2" rows="2" style="resize:vertical;min-height:60px">' + esc(f.memo2 || '') + '</textarea><div class="hint">リースの契約・税金・連絡先など。修理から戻っても消えません</div></div>'; }
-  h += '</div><div class="acts"><button class="btn b-pri" id="save">' + (id ? '保存する' : '車を足す') + '</button>' + (id ? '<span style="flex:1"></span><button class="btn b-ng" id="del">この車を消す</button>' : '') + '</div></div>';
-  if (id) h += '<div class="box"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><h4 style="margin:0">整備・手続きの記録</h4><span style="flex:1"></span><button class="btn b-soft" id="mAddCar">＋ 予定・記録を足す</button></div><div id="mCar" class="loading" style="padding:12px">読み込み中…</div></div>';
+  h += '</div><div class="acts"><button class="btn b-pri" id="save">' + (id ? '保存する' : '車を追加') + '</button>' + (id ? '<span style="flex:1"></span><button class="btn b-ng" id="del">この車を削除</button>' : '') + '</div></div>';
+  if (id) h += '<div class="box"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><h4 style="margin:0">整備・手続きの記録</h4><span style="flex:1"></span><button class="btn b-soft" id="mAddCar">＋ 予定・記録を追加</button></div><div id="mCar" class="loading" style="padding:12px">読み込み中…</div></div>';
   if (id) h += '<div class="box"><h4>これまでの記録</h4><div id="logs" class="loading" style="padding:20px">読み込み中…</div></div>';
   h += '<button class="btn b-soft" id="dback2" style="width:100%;justify-content:center;padding:12px">← 一覧に戻る</button></div>';
   $('drawer').innerHTML = h; wdFill($('drawer'));
@@ -389,7 +389,7 @@ function openCar(id) {
     if (!p.name.trim()) { toast('車の名前を入れてください'); return; }
     if (id && p.status === '使用中') p.status = '';
     $('save').disabled = true;
-    api('adminSaveCar', [p]).then(r => { toast(id ? '保存しました' : r.id + ' として足しました'); closeDrawer(); load(); })
+    api('adminSaveCar', [p]).then(r => { toast(id ? '保存しました' : r.id + ' として追加しました'); closeDrawer(); load(); })
       .catch(e => { $('save').disabled = false; toast(e.message); });
   };
   if (!id) { $('fName').focus(); return; }
@@ -397,7 +397,7 @@ function openCar(id) {
   loadMnt().then(() => {
     const l = M.list.filter(o => o.carId === id);
     $('mCar').className = '';
-    $('mCar').innerHTML = l.length ? l.map(o => '<div class="mrec"><div class="t num">' + ymd(o.start || o.end) + '</div><div><b>' + esc(o.type) + '</b> ' + mstPill(o.state) + '<div class="hint">' + esc([o.shop, o.detail].filter(x => x).join('　')) + (o.cost ? '　' + km(o.cost) + '円' : '') + '</div></div><button class="btn b-soft" data-mid="' + esc(o.id) + '">直す</button></div>').join('') : '<div class="empty" style="padding:12px">まだありません。過去の車検・修理も足しておくと、ここに全部並びます</div>';
+    $('mCar').innerHTML = l.length ? l.map(o => '<div class="mrec"><div class="t num">' + ymd(o.start || o.end) + '</div><div><b>' + esc(o.type) + '</b> ' + mstPill(o.state) + '<div class="hint">' + esc([o.shop, o.detail].filter(x => x).join('　')) + (o.cost ? '　' + km(o.cost) + '円' : '') + '</div></div><button class="btn b-soft" data-mid="' + esc(o.id) + '">編集</button></div>').join('') : '<div class="empty" style="padding:12px">まだありません。過去の車検・修理も登録しておくと、ここに一覧で表示されます</div>';
     $('mCar').querySelectorAll('[data-mid]').forEach(b => b.onclick = () => openMnt(b.dataset.mid));
   }).catch(e => { $('mCar').innerHTML = '<div class="err" style="display:block">' + esc(e.message) + '</div>'; });
   if (false) $('fNote').oninput = () => {
@@ -408,8 +408,8 @@ function openCar(id) {
     if (!$('fIn').value) $('fIn').value = mk(+m[1], +m[2]);
     if (!$('fOut').value) $('fOut').value = mk(+(m[3] || m[1]), +m[4]);
   };
-  $('del').onclick = () => ask('「' + c.name + '」を消しますか？', 'この車は一覧と入力画面から消えます。これまでの記録は表に残ります。貼ってあるQRは使えんようになります。', () => {
-    api('adminDeleteCar', [id]).then(() => { toast('消しました'); closeDrawer(); load(); }).catch(e => toast(e.message));
+  $('del').onclick = () => ask('「' + c.name + '」を削除しますか？', 'この車は一覧と入力画面から消えます。これまでの記録は表に残ります。貼ってあるQRは使えなくなります。', () => {
+    api('adminDeleteCar', [id]).then(() => { toast('削除しました'); closeDrawer(); load(); }).catch(e => toast(e.message));
   });
   api('adminCarLog', [id]).then(list => {
     if (!list.length) { $('logs').className = ''; $('logs').innerHTML = '<div class="empty" style="padding:20px">まだ記録がありません</div>'; return; }
@@ -423,13 +423,13 @@ function openCar(id) {
       if (l.fuel) chips.push('<span class="chip">給油 ' + esc(l.fuel) + (/^\d/.test(String(l.fuel)) ? 'L' : '') + '</span>');
       if (l.tire) chips.push('<span class="chip">タイヤ ' + esc(l.tire) + '</span>');
       return '<div class="log"><div class="t num">' + esc(l.at) + '</div><div><span class="k">' + esc(l.kind) + '</span>' + (l.name ? '　' + esc(l.name) : '') +
-        '<div>' + chips.join('') + (l.meter && /^(乗る|降りる)$/.test(l.kind) ? '<button class="mfix" data-row="' + l.row + '" data-m="' + l.meter + '">メーターを直す</button>' : '') + '</div><div class="mbox"></div>' + (l.memo ? '<div class="hint">' + esc(l.memo) + '</div>' : '') + photoBtns(l.photos) + '</div></div>';
+        '<div>' + chips.join('') + (l.meter && /^(乗る|降りる)$/.test(l.kind) ? '<button class="mfix" data-row="' + l.row + '" data-m="' + l.meter + '">メーターを修正</button>' : '') + '</div><div class="mbox"></div>' + (l.memo ? '<div class="hint">' + esc(l.memo) + '</div>' : '') + photoBtns(l.photos) + '</div></div>';
     }).join('');
     bindPhotos($('logs'));
     $('logs').querySelectorAll('.mfix').forEach(b => b.onclick = () => {
       const box = b.parentElement.nextElementSibling;
       if (box.innerHTML) { box.innerHTML = ''; return; }
-      box.innerHTML = '<div class="mrow"><input class="f num" inputmode="numeric" value="' + b.dataset.m + '"><span>km に</span><button class="btn b-pri">直す</button><button class="btn b-soft">やめる</button></div><div class="hint">走った距離とオイル交換までの距離も、自動で計算し直します</div>';
+      box.innerHTML = '<div class="mrow"><input class="f num" inputmode="numeric" value="' + b.dataset.m + '"><span>km に</span><button class="btn b-pri">修正する</button><button class="btn b-soft">キャンセル</button></div><div class="hint">走行距離とオイル交換までの距離も、自動で再計算します</div>';
       const inp = box.querySelector('input'), bs = box.querySelectorAll('button');
       inp.focus(); inp.select();
       bs[1].onclick = () => { box.innerHTML = ''; };
@@ -461,9 +461,9 @@ function dmgView() {
   let h = '<section class="card"><div class="head"><h2>キズの報告</h2><span class="hint">新しい順</span></div>';
   if (!D.dmg.length) return h + '<div class="empty">キズの報告はまだありません</div></section>';
   D.dmg.forEach(d => {
-    h += '<div class="dmg"><div><h4>' + esc(d.car) + '</h4><div class="meta num">' + esc(d.at) + '　見つけた人：' + esc(d.finder) + '（' + esc(d.how) + '）</div>' +
+    h += '<div class="dmg"><div><h4>' + esc(d.car) + '</h4><div class="meta num">' + esc(d.at) + '　発見者：' + esc(d.finder) + '（' + esc(d.how) + '）</div>' +
       (d.note ? '<div style="margin-top:6px">' + esc(d.note) + '</div>' : '') + photoBtns(d.photos) +
-      '<div class="riders"><b>写真のあとに乗った人</b>\n' + esc(d.riders) + '</div></div>' +
+      '<div class="riders"><b>写真撮影後に乗った人</b>\n' + esc(d.riders) + '</div></div>' +
       '<div><label for="m' + d.row + '">対応メモ</label><textarea class="f" id="m' + d.row + '" rows="4" placeholder="例）11/18 〇〇自動車で見積もり。本人に確認済み">' + esc(d.memo) + '</textarea>' +
       '<div class="acts"><button class="btn b-soft" data-row="' + d.row + '">メモを保存</button></div></div></div>';
   });
@@ -483,16 +483,16 @@ function loadMnt(force) { if (M && !force) return Promise.resolve(M); return api
 function mstPill(s) { return '<span class="mst ' + ({ '予定': 'p', '入庫中': 'i', '記入待ち': 'w', '完了': 'c' }[s] || 'd') + '">' + esc(s) + '</span>'; }
 function mntView() {
   if (!M) return '<section class="card"><div class="empty">読み込み中…</div></section>';
-  let h = '<section class="card"><div class="head"><h2>これからの予定・期限</h2><span class="hint">予定は入れた日、期限は車検証・点検・保険から自動で出します</span><span class="sp"></span><button class="btn b-pri" id="mAdd">＋ 予定・記録を足す</button></div>';
+  let h = '<section class="card"><div class="head"><h2>これからの予定・期限</h2><span class="hint">予定は入れた日、期限は車検証・点検・保険から自動で出します</span><span class="sp"></span><button class="btn b-pri" id="mAdd">＋ 予定・記録を追加</button></div>';
   const up = M.upcoming.filter(x => x.date);
-  if (!up.length) h += '<div class="empty">今のところありません。車の「直す ›」で車検・点検・保険の期限を入れると、ここに出ます</div>';
+  if (!up.length) h += '<div class="empty">現在ありません。車の「編集 ›」で車検・点検・保険の期限を入力すると、ここに表示されます</div>';
   else {
     h += '<table class="mt"><thead><tr><th>日にち</th><th></th><th>車</th><th>種類</th><th class="hide-s">中身</th><th>状態</th><th></th></tr></thead><tbody>';
     up.forEach(x => {
       const days = Math.round((new Date(x.date + 'T00:00:00') - new Date(D.today + 'T00:00:00')) / 86400000);
       const left = '<span class="left ' + (days < 0 ? 'ng' : days <= 14 ? 'warn' : '') + '">' + (days < 0 ? (-days) + '日過ぎ' : days === 0 ? '今日' : 'あと' + days + '日') + '</span>';
-      if (x.kind === 'due') h += '<tr><td class="d num">' + ymd(x.date) + '</td><td>' + left + '</td><td><b>' + esc(x.car) + '</b></td><td>' + esc(x.type) + '</td><td class="hide-s hint">期限。まだ予定が入っていません</td><td><span class="mst d">期限</span></td><td class="r">' + (M.types.indexOf(x.type) >= 0 ? '<button class="btn b-soft" data-plan="' + esc(x.carId) + '|' + esc(x.type) + '">予定を入れる</button>' : '<button class="btn b-soft" data-car="' + esc(x.carId) + '">車の画面で直す</button>') + '</td></tr>';
-      else { const o = x.rec; h += '<tr><td class="d num">' + ymd(x.date) + (o.state === '入庫中' ? '<div class="hint">戻り予定</div>' : o.state === '記入待ち' ? '<div class="hint">戻った日</div>' : '') + '</td><td>' + (o.state === '記入待ち' ? '' : left) + '</td><td><b>' + esc(o.car) + '</b></td><td>' + esc(o.type) + '</td><td class="hide-s">' + esc([o.shop, o.detail].filter(v => v).join('　')) + (o.state === '記入待ち' ? '<div class="alert">費用などを入れて「完了」に</div>' : '') + '</td><td>' + mstPill(o.state) + '</td><td class="r"><button class="btn b-soft" data-mid="' + esc(o.id) + '">直す</button></td></tr>'; }
+      if (x.kind === 'due') h += '<tr><td class="d num">' + ymd(x.date) + '</td><td>' + left + '</td><td><b>' + esc(x.car) + '</b></td><td>' + esc(x.type) + '</td><td class="hide-s hint">期限。まだ予定が入っていません</td><td><span class="mst d">期限</span></td><td class="r">' + (M.types.indexOf(x.type) >= 0 ? '<button class="btn b-soft" data-plan="' + esc(x.carId) + '|' + esc(x.type) + '">予定を入れる</button>' : '<button class="btn b-soft" data-car="' + esc(x.carId) + '">車の画面で編集</button>') + '</td></tr>';
+      else { const o = x.rec; h += '<tr><td class="d num">' + ymd(x.date) + (o.state === '入庫中' ? '<div class="hint">戻り予定</div>' : o.state === '記入待ち' ? '<div class="hint">戻った日</div>' : '') + '</td><td>' + (o.state === '記入待ち' ? '' : left) + '</td><td><b>' + esc(o.car) + '</b></td><td>' + esc(o.type) + '</td><td class="hide-s">' + esc([o.shop, o.detail].filter(v => v).join('　')) + (o.state === '記入待ち' ? '<div class="alert">費用などを入れて「完了」に</div>' : '') + '</td><td>' + mstPill(o.state) + '</td><td class="r"><button class="btn b-soft" data-mid="' + esc(o.id) + '">編集</button></td></tr>'; }
     });
     h += '</tbody></table>';
   }
@@ -505,9 +505,9 @@ function mntView() {
     '<select class="f" id="mfYear"><option value="">年：すべて</option>' + years.map(y => '<option' + (MF.year === y ? ' selected' : '') + '>' + y + '</option>').join('') + '</select></div>';
   if (!list.length) return h + '<div class="empty">記録はまだありません</div></section>';
   h += '<table class="mt"><thead><tr><th>日にち</th><th>車</th><th>種類</th><th class="hide-s">業者</th><th class="hide-s">内容</th><th class="r">費用</th><th>状態</th><th></th></tr></thead><tbody>';
-  list.forEach(o => { h += '<tr><td class="d num">' + ymd(o.start || o.end) + (o.end && o.start && o.end !== o.start ? '<div class="hint">〜' + md(o.end) + '</div>' : '') + '</td><td><b>' + esc(o.car) + '</b></td><td>' + esc(o.type) + '</td><td class="hide-s">' + esc(o.shop) + '</td><td class="hide-s">' + esc(o.detail) + (o.next ? '<div class="hint">次の期限 ' + ymd(o.next) + '</div>' : '') + '</td><td class="r num">' + (o.cost ? km(o.cost) + '円' : '—') + '</td><td>' + mstPill(o.state) + '</td><td class="r"><button class="btn b-soft" data-mid="' + esc(o.id) + '">直す</button></td></tr>'; });
+  list.forEach(o => { h += '<tr><td class="d num">' + ymd(o.start || o.end) + (o.end && o.start && o.end !== o.start ? '<div class="hint">〜' + md(o.end) + '</div>' : '') + '</td><td><b>' + esc(o.car) + '</b></td><td>' + esc(o.type) + '</td><td class="hide-s">' + esc(o.shop) + '</td><td class="hide-s">' + esc(o.detail) + (o.next ? '<div class="hint">次の期限 ' + ymd(o.next) + '</div>' : '') + '</td><td class="r num">' + (o.cost ? km(o.cost) + '円' : '—') + '</td><td>' + mstPill(o.state) + '</td><td class="r"><button class="btn b-soft" data-mid="' + esc(o.id) + '">編集</button></td></tr>'; });
   const sum = list.reduce((a, o) => a + (Number(o.cost) || 0), 0);
-  return h + '</tbody></table><div class="total">費用の合計（いま出とる分）：<span class="num">' + km(sum) + '</span> 円</div></section>';
+  return h + '</tbody></table><div class="total">費用の合計（現時点）：<span class="num">' + km(sum) + '</span> 円</div></section>';
 }
 function bindMnt() {
   if (!M) { loadMnt().then(render).catch(e => toast(e.message)); return; }
@@ -522,20 +522,20 @@ function openMnt(mid, pre) {
     const o = mid ? M.list.filter(x => x.id === mid)[0] : Object.assign({ id: '', carId: '', type: '車検', state: '予定', start: '', end: '', shop: '', detail: '', cost: '', km: '', next: '', memo: '' }, pre || {});
     if (!o) { toast('この記録は見つかりません'); return; }
     const nextLabel = t => t === '車検' ? '次の車検の期限（新しい車検証の満了日）' : t === '保険' ? '次の満期日' : t === '12か月点検' ? '次の点検の期限（空なら1年後）' : '次の期限（あれば）';
-    let h = '<div class="dtop"><button class="dback" id="dback">← 戻る</button><div><h3>' + (mid ? '記録を直す' : '予定・記録を足す') + '</h3><small>日が決まった時は「予定」、済んだら「完了」にします</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
+    let h = '<div class="dtop"><button class="dback" id="dback">← 戻る</button><div><h3>' + (mid ? '記録を編集' : '予定・記録を追加') + '</h3><small>日が決まった時は「予定」、済んだら「完了」にします</small></div><button class="x" id="dx" aria-label="閉じる">×</button></div><div class="dbody">';
     h += '<div class="box"><div class="grid">' +
       '<div><label for="gCar">車</label><select class="f" id="gCar"><option value="">選んでください</option>' + M.cars.map(c => '<option value="' + esc(c.id) + '"' + (o.carId === c.id ? ' selected' : '') + '>' + esc(c.name) + '（' + esc(c.plate) + '）</option>').join('') + '</select></div>' +
       '<div><label for="gType">種類</label><select class="f" id="gType">' + M.types.map(t => '<option' + (o.type === t ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select></div>' +
-      '<div><label for="gState">状態</label><select class="f" id="gState">' + M.states.map(s => '<option' + (o.state === s ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select><div class="hint">予定＝日が決まった／入庫中＝工場に入っとる／記入待ち＝戻ったけど費用がまだ／完了</div></div>' +
+      '<div><label for="gState">状態</label><select class="f" id="gState">' + M.states.map(s => '<option' + (o.state === s ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select><div class="hint">予定＝日程が決定／入庫中＝工場に入庫している／記入待ち＝戻ったが費用が未入力／完了</div></div>' +
       '<div><label for="gStart">入庫日・実施日</label><input class="f num" id="gStart" type="date" value="' + esc(o.start) + '"></div>' +
-      '<div><label for="gEnd">戻り日（予定）</label><input class="f num" id="gEnd" type="date" value="' + esc(o.end) + '"><div class="hint">保険・税金なら空でOK</div></div>' +
+      '<div><label for="gEnd">戻り日（予定）</label><input class="f num" id="gEnd" type="date" value="' + esc(o.end) + '"><div class="hint">保険・税金の場合は空欄で構いません</div></div>' +
       '<div><label for="gShop">業者・保険会社</label><input class="f" id="gShop" value="' + esc(o.shop) + '" placeholder="例）〇〇自動車"></div>' +
       '<div style="grid-column:1/-1"><label for="gDetail">内容</label><input class="f" id="gDetail" value="' + esc(o.detail) + '" placeholder="例）右後ろのドアのへこみ／ブレーキパッド交換"></div>' +
       '<div><label for="gCost">費用（円）</label><input class="f num" id="gCost" inputmode="numeric" value="' + esc(o.cost) + '" placeholder="例）85000"></div>' +
       '<div><label for="gKm">走行距離（km）</label><input class="f num" id="gKm" inputmode="numeric" value="' + esc(o.km) + '"></div>' +
       '<div><label for="gNext" id="gNextL">' + nextLabel(o.type) + '</label><input class="f num" id="gNext" type="date" value="' + esc(o.next) + '"><div class="hint">「完了」で保存すると、車の期限も自動で新しくなります</div></div>' +
       '<div style="grid-column:1/-1"><label for="gMemo">メモ</label><textarea class="f" id="gMemo" rows="2">' + esc(o.memo) + '</textarea></div>' +
-      '</div><div class="acts"><button class="btn b-pri" id="gSave">保存する</button>' + (mid ? '<span style="flex:1"></span><button class="btn b-ng" id="gDel">この記録を消す</button>' : '') + '</div></div>';
+      '</div><div class="acts"><button class="btn b-pri" id="gSave">保存する</button>' + (mid ? '<span style="flex:1"></span><button class="btn b-ng" id="gDel">この記録を削除</button>' : '') + '</div></div>';
     h += '<div class="box hint" style="line-height:1.7">知らせ（朝のLINE）：予定は入庫の7・3日前、前日、当日。入庫中は戻りの前日と当日、過ぎたら毎朝。記入待ちは毎週月曜。</div></div>';
     $('drawer').innerHTML = h; wdFill($('drawer'));
     if (!document.getElementById('dw').classList.contains('open')) { document.getElementById('dw').classList.add('open'); history.pushState({ dw: 1 }, ''); }
@@ -549,8 +549,8 @@ function openMnt(mid, pre) {
       api('adminSaveMnt', [p]).then(() => { toast('保存しました'); closeDrawer(); return loadMnt(true).then(load); })
         .catch(e => { $('gSave').disabled = false; toast(e.message); });
     };
-    if (mid) $('gDel').onclick = () => ask('この記録を消しますか？', o.car + '　' + o.type + '　' + ymd(o.start || o.end) + '　消すと戻せません。', () => {
-      api('adminDeleteMnt', [mid]).then(() => { toast('消しました'); closeDrawer(); return loadMnt(true).then(load); }).catch(e => toast(e.message));
+    if (mid) $('gDel').onclick = () => ask('この記録を削除しますか？', o.car + '　' + o.type + '　' + ymd(o.start || o.end) + '　削除すると元に戻せません。', () => {
+      api('adminDeleteMnt', [mid]).then(() => { toast('削除しました'); closeDrawer(); return loadMnt(true).then(load); }).catch(e => toast(e.message));
     });
   }).catch(e => toast(e.message));
 }
@@ -558,18 +558,18 @@ function openMnt(mid, pre) {
 /* ---------- ドライバー ---------- */
 function peopleView() {
   return '<section class="card"><div class="head"><h2>ドライバー</h2><span class="hint">' + D.people.length + '人。入力画面の名前の一覧に、この順で出ます</span></div>' +
-    '<div class="people">' + D.people.map(p => '<span class="pp">' + esc(p) + '<button data-del="' + esc(p) + '" aria-label="' + esc(p) + 'を消す">×</button></span>').join('') + '</div>' +
-    '<div class="add"><input class="f" id="np" placeholder="足す人の名前（例：山田）"><button class="btn b-pri" id="npAdd">＋ 足す</button></div></section>';
+    '<div class="people">' + D.people.map(p => '<span class="pp">' + esc(p) + '<button data-del="' + esc(p) + '" aria-label="' + esc(p) + 'を削除">×</button></span>').join('') + '</div>' +
+    '<div class="add"><input class="f" id="np" placeholder="追加する人の名前（例：山田）"><button class="btn b-pri" id="npAdd">＋ 追加</button></div></section>';
 }
 function bindPeople() {
   const add = () => { const n = $('np').value.trim(); if (!n) return; $('npAdd').disabled = true;
-    api('adminAddName', [n]).then(() => { D.people.push(n); toast(n + 'さんを足しました'); render(); $('np').focus(); })
+    api('adminAddName', [n]).then(() => { D.people.push(n); toast(n + 'さんを追加しました'); render(); $('np').focus(); })
       .catch(e => { $('npAdd').disabled = false; toast(e.message); }); };
   $('npAdd').onclick = add; $('np').onkeydown = e => { if (e.key === 'Enter') add(); };
   document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
     const n = b.dataset.del;
-    ask(n + 'さんを消しますか？', '入力画面の名前の一覧から消えます。これまでの記録は残ります。', () => {
-      api('adminDeleteName', [n]).then(() => { D.people = D.people.filter(x => x !== n); toast('消しました'); render(); }).catch(e => toast(e.message));
+    ask(n + 'さんを削除しますか？', '入力画面の名前の一覧から削除されます。これまでの記録は残ります。', () => {
+      api('adminDeleteName', [n]).then(() => { D.people = D.people.filter(x => x !== n); toast('削除しました'); render(); }).catch(e => toast(e.message));
     });
   });
 }
@@ -590,18 +590,18 @@ function statsView() {
   let h = '<section class="card"><div class="head"><h2>集計（' + ml(ym) + '）</h2><span class="hint">記録は ' + ymd(ST.first) + ' から。人ごとの集計はしていません</span><span class="sp"></span>' +
     '<select class="f" id="stM" style="width:auto">' + ST.months.map(m => '<option value="' + m + '"' + (m === ym ? ' selected' : '') + '>' + ml(m) + '</option>').join('') + '</select>' +
     '<button class="btn b-pri" id="stRep">社長用レポート（PDF）を作る</button></div><div id="stRepOut" class="hint" style="padding:0 18px 10px"></div>';
-  h += '<div class="sgrid">' + [['走った距離（全車）', km(sum('dist')) + ' km'], ['使った時間（全車）', Math.round(sum('hours')) + ' 時間'], ['使われた回数', sum('trips') + ' 回'],
-    ['1日に動いた台数', act.length ? '平均 ' + (Math.round(act.reduce((a, d) => a + d.used, 0) / act.length * 10) / 10) + '・最大 ' + Math.max.apply(null, act.map(d => d.used)) + ' 台' : '—'],
-    ['同時に使われた最大', pk.peak ? pk.peak + ' 台（' + md(pk.date) + '）' : '—'], ['一度も使われなかった車', idle.length + ' 台']]
+  h += '<div class="sgrid">' + [['走行距離（全車）', km(sum('dist')) + ' km'], ['使用時間（全車）', Math.round(sum('hours')) + ' 時間'], ['使用回数', sum('trips') + ' 回'],
+    ['1日の稼働台数', act.length ? '平均 ' + (Math.round(act.reduce((a, d) => a + d.used, 0) / act.length * 10) / 10) + '・最大 ' + Math.max.apply(null, act.map(d => d.used)) + ' 台' : '—'],
+    ['同時使用の最大', pk.peak ? pk.peak + ' 台（' + md(pk.date) + '）' : '—'], ['一度も使用されなかった車', idle.length + ' 台']]
     .map(x => '<div class="sk"><small>' + x[0] + '</small><b class="num">' + x[1] + '</b></div>').join('') + '</div>' +
-    (idle.length ? '<div class="hint" style="padding:0 18px 18px">使われなかった車：' + idle.map(c => esc(c.name)).join('、') + '</div>' : '') + '</section>';
+    (idle.length ? '<div class="hint" style="padding:0 18px 18px">使用されなかった車：' + idle.map(c => esc(c.name)).join('、') + '</div>' : '') + '</section>';
   const byD = used.slice().sort((a, b) => b.dist - a.dist), byH = used.slice().sort((a, b) => b.hours - a.hours);
-  h += '<div class="s2"><section class="card"><div class="head"><h2>車ごとの走った距離</h2></div><div class="hbs">' + (byD.length ? hbar(byD, 'dist', ' km', '#2563eb') : '<div class="empty">記録なし</div>') + '</div></section>' +
-    '<section class="card"><div class="head"><h2>車ごとの使った時間</h2></div><div class="hbs">' + (byH.length ? hbar(byH, 'hours', ' 時間', '#059669') : '<div class="empty">記録なし</div>') + '</div></section></div>';
+  h += '<div class="s2"><section class="card"><div class="head"><h2>車ごとの走行距離</h2></div><div class="hbs">' + (byD.length ? hbar(byD, 'dist', ' km', '#2563eb') : '<div class="empty">記録なし</div>') + '</div></section>' +
+    '<section class="card"><div class="head"><h2>車ごとの使用時間</h2></div><div class="hbs">' + (byH.length ? hbar(byH, 'hours', ' 時間', '#059669') : '<div class="empty">記録なし</div>') + '</div></section></div>';
   const mxd = Math.max.apply(null, ST.days.map(d => d.used).concat([1]));
-  h += '<section class="card"><div class="head"><h2>毎日、何台の車が動いたか</h2><span class="hint"><i class="lg" style="background:#2563eb"></i>その日に動いた台数<i class="lg" style="background:#d97706"></i>同時に使われた最大</span></div><div class="cols">' +
+  h += '<section class="card"><div class="head"><h2>日ごとの稼働台数</h2><span class="hint"><i class="lg" style="background:#2563eb"></i>その日の稼働台数<i class="lg" style="background:#d97706"></i>同時使用の最大</span></div><div class="cols">' +
     ST.days.map(d => '<div class="col" title="' + md(d.date) + '：' + d.used + '台・同時に最大' + d.peak + '台"><div class="cb"><i style="height:' + (d.used / mxd * 100) + '%;background:#2563eb"></i><i style="height:' + (d.peak / mxd * 100) + '%;background:#d97706"></i></div><small class="' + (Number(d.date.slice(8, 10)) % 5 === 1 ? '' : 'sx') + '">' + Number(d.date.slice(8, 10)) + '</small></div>').join('') + '</div></section>';
-  h += '<section class="card"><div class="head"><h2>車ごとの数字</h2><span class="hint">1年のペース＝この月の走り方が1年続いた時の距離。年式が分かれば寿命の目安も出せます</span></div><div class="stscroll"><table class="st-t"><thead><tr><th>車</th><th>所属</th><th class="r">使った日</th><th class="r">時間</th><th class="r">回数</th><th class="r">走った距離</th><th class="r">給油</th><th class="r">燃費</th><th class="r">入力忘れ</th><th class="r">キズ</th><th class="r">整備費</th><th class="r">リース料/月</th><th class="r">メーター</th><th class="r">1年のペース</th></tr></thead><tbody>' +
+  h += '<section class="card"><div class="head"><h2>車ごとの数字</h2><span class="hint">1年のペース＝この月の走り方が1年続いた時の距離。年式が分かれば寿命の目安も出せます</span></div><div class="stscroll"><table class="st-t"><thead><tr><th>車</th><th>所属</th><th class="r">使用日数</th><th class="r">時間</th><th class="r">回数</th><th class="r">走行距離</th><th class="r">給油</th><th class="r">燃費</th><th class="r">入力忘れ</th><th class="r">キズ</th><th class="r">整備費</th><th class="r">リース料/月</th><th class="r">メーター</th><th class="r">1年のペース</th></tr></thead><tbody>' +
     used.concat(cs.filter(c => used.indexOf(c) < 0)).map(c => '<tr' + (c.trips || c.dist ? '' : ' class="dim"') + '><td><b>' + esc(c.name) + '</b></td><td>' + esc(c.area) + '</td><td class="r num">' + c.days + '</td><td class="r num">' + c.hours + '</td><td class="r num">' + c.trips + '</td><td class="r num">' + km(c.dist) + ' km</td><td class="r num">' + (c.fuel ? c.fuel + ' L' : '—') + '</td><td class="r num">' + (c.eff ? c.eff + ' km/L' : '—') + '</td><td class="r num' + (c.forgot ? ' warnc' : '') + '">' + c.forgot + '</td><td class="r num' + (c.dmg ? ' warnc' : '') + '">' + c.dmg + '</td><td class="r num">' + (c.cost ? km(c.cost) + '円' : '—') + '</td><td class="r num">' + (c.lease ? km(c.lease) + '円' : '—') + '</td><td class="r num">' + (c.meter ? km(c.meter) : '—') + '</td><td class="r num">' + (c.pace ? km(c.pace) + ' km' : '—') + '</td></tr>').join('') +
     '</tbody></table></div></section>';
   return h;
